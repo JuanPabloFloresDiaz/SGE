@@ -1,0 +1,10 @@
+-- Tabla de asignaturas o materias
+CREATE TABLE asignaturas (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  codigo VARCHAR(50) UNIQUE,
+  nombre VARCHAR(200) NOT NULL,
+  descripcion TEXT,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL
+) ENGINE=InnoDB;

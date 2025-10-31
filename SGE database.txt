@@ -1,0 +1,269 @@
+-- ...existing code...
+DROP DATABASE IF EXISTS SGE;
+CREATE DATABASE SGE CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE SGE;
+
+-- Roles de usuarios
+CREATE TABLE roles (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  nombre VARCHAR(50) NOT NULL UNIQUE,
+  descripcion VARCHAR(255),
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL
+) ENGINE=InnoDB;
+
+-- Usuarios (profesores, administradores, etc.)
+CREATE TABLE usuarios (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  username VARCHAR(100) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  nombre VARCHAR(120),
+  email VARCHAR(150) UNIQUE,
+  telefono VARCHAR(30),
+  rol_id CHAR(36) NOT NULL,
+  activo TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+-- Información específica de estudiantes (opcional vínculo con usuarios)
+CREATE TABLE estudiantes (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  usuario_id CHAR(36) NULL,
+  codigo_estudiante VARCHAR(50) UNIQUE,
+  fecha_nacimiento DATE,
+  direccion VARCHAR(255),
+  genero ENUM('M','F','O') DEFAULT 'O',
+  ingreso DATE,
+  activo TINYINT(1) DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Profesores (opcional: vinculado a usuarios)
+CREATE TABLE profesores (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  usuario_id CHAR(36) NULL,
+  especialidad VARCHAR(150),
+  contrato ENUM('tiempo_completo','medio_tiempo','eventual') DEFAULT 'eventual',
+  activo TINYINT(1) DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Periodos/semestres
+CREATE TABLE periodos (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  fecha_inicio DATE,
+  fecha_fin DATE,
+  activo TINYINT(1) DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL
+) ENGINE=InnoDB;
+
+-- Asignaturas o materias
+CREATE TABLE asignaturas (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  codigo VARCHAR(50) UNIQUE,
+  nombre VARCHAR(200) NOT NULL,
+  descripcion TEXT,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL
+) ENGINE=InnoDB;
+
+-- Cursos / grupos (una asignatura dictada en un periodo por un profesor)
+CREATE TABLE cursos (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  asignatura_id CHAR(36) NOT NULL,
+  profesor_id CHAR(36) NULL,
+  periodo_id CHAR(36) NOT NULL,
+  nombre_grupo VARCHAR(100),
+  aula_default VARCHAR(100),
+  cupo INT UNSIGNED DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (asignatura_id) REFERENCES asignaturas(id) ON DELETE RESTRICT,
+  FOREIGN KEY (profesor_id) REFERENCES profesores(id) ON DELETE SET NULL,
+  FOREIGN KEY (periodo_id) REFERENCES periodos(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+-- Bloques de horario reutilizables (p.ej. 08:00-09:30)
+CREATE TABLE bloques_horario (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  nombre VARCHAR(100),
+  inicio TIME NOT NULL,
+  fin TIME NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL
+) ENGINE=InnoDB;
+
+-- Horarios por curso (vincula curso a bloque y día)
+CREATE TABLE horarios_curso (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  curso_id CHAR(36) NOT NULL,
+  bloque_id CHAR(36) NOT NULL,
+  dia ENUM('LUN','MAR','MIE','JUE','VIE','SAB','DOM') NOT NULL,
+  aula VARCHAR(100) NULL,
+  tipo ENUM('regular','laboratorio','taller','otro') DEFAULT 'regular',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  UNIQUE KEY uni_horario_curso (curso_id, bloque_id, dia),
+  FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE,
+  FOREIGN KEY (bloque_id) REFERENCES bloques_horario(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+-- Inscripciones / matrículas de estudiantes en cursos
+CREATE TABLE inscripciones (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  curso_id CHAR(36) NOT NULL,
+  estudiante_id CHAR(36) NOT NULL,
+  fecha_inscripcion DATE DEFAULT CURRENT_DATE,
+  estado ENUM('inscrito','retirado','completado') DEFAULT 'inscrito',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  UNIQUE KEY uni_est_curso (curso_id, estudiante_id),
+  FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE,
+  FOREIGN KEY (estudiante_id) REFERENCES estudiantes(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Unidades de un curso (estructura pedagógica)
+CREATE TABLE unidades (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  curso_id CHAR(36) NOT NULL,
+  numero INT NULL,
+  titulo VARCHAR(200),
+  descripcion TEXT,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Temas dentro de una unidad
+CREATE TABLE temas (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  unidad_id CHAR(36) NOT NULL,
+  numero INT NULL,
+  titulo VARCHAR(200) NOT NULL,
+  descripcion TEXT,
+  duracion_minutos INT UNSIGNED NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (unidad_id) REFERENCES unidades(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Sesiones de clase (ahora referencian unidad/tema)
+CREATE TABLE clases (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  curso_id CHAR(36) NOT NULL,
+  fecha DATE NOT NULL,
+  inicio TIME,
+  fin TIME,
+  unidad_id CHAR(36) NULL,
+  tema_id CHAR(36) NULL,
+  notas TEXT,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE,
+  FOREIGN KEY (unidad_id) REFERENCES unidades(id) ON DELETE SET NULL,
+  FOREIGN KEY (tema_id) REFERENCES temas(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Asistencia por clase
+CREATE TABLE asistencia (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  clase_id CHAR(36) NOT NULL,
+  estudiante_id CHAR(36) NOT NULL,
+  estado ENUM('presente','ausente','tarde','justificado') NOT NULL,
+  observacion VARCHAR(255),
+  registrado_por CHAR(36) NULL, -- usuario que registró
+  registrado_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  UNIQUE KEY uni_clase_est (clase_id, estudiante_id),
+  FOREIGN KEY (clase_id) REFERENCES clases(id) ON DELETE CASCADE,
+  FOREIGN KEY (estudiante_id) REFERENCES estudiantes(id) ON DELETE CASCADE,
+  FOREIGN KEY (registrado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Tipos de evaluación (examen, tarea, parcial, etc.)
+CREATE TABLE tipos_evaluacion (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  descripcion VARCHAR(255),
+  peso DECIMAL(5,2) DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL
+) ENGINE=InnoDB;
+
+-- Evaluaciones / actividades (anexadas a un curso)
+CREATE TABLE evaluaciones (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  curso_id CHAR(36) NOT NULL,
+  tipo_id CHAR(36) NOT NULL,
+  nombre VARCHAR(200) NOT NULL,
+  fecha DATE,
+  peso DECIMAL(5,2) DEFAULT 0,
+  publicado TINYINT(1) DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE,
+  FOREIGN KEY (tipo_id) REFERENCES tipos_evaluacion(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;
+
+-- Calificaciones (notas) de estudiantes en evaluaciones
+CREATE TABLE calificaciones (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  evaluacion_id CHAR(36) NOT NULL,
+  estudiante_id CHAR(36) NOT NULL,
+  nota DECIMAL(6,2) NOT NULL,
+  comentario VARCHAR(255),
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  UNIQUE KEY uni_eval_est (evaluacion_id, estudiante_id),
+  FOREIGN KEY (evaluacion_id) REFERENCES evaluaciones(id) ON DELETE CASCADE,
+  FOREIGN KEY (estudiante_id) REFERENCES estudiantes(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- Reportes/observaciones relacionadas con estudiantes
+CREATE TABLE reportes (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  estudiante_id CHAR(36) NOT NULL,
+  curso_id CHAR(36) NULL,
+  tipo ENUM('conducta','academico','otro') DEFAULT 'otro',
+  titulo VARCHAR(200),
+  descripcion TEXT,
+  creado_por CHAR(36) NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (estudiante_id) REFERENCES estudiantes(id) ON DELETE CASCADE,
+  FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE SET NULL,
+  FOREIGN KEY (creado_por) REFERENCES usuarios(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
+
+-- Índices útiles
+CREATE INDEX idx_usuario_rol ON usuarios(rol_id);
+CREATE INDEX idx_inscripcion_curso ON inscripciones(curso_id);
+CREATE INDEX idx_calificaciones_estudiante ON calificaciones(estudiante_id);
+-- ...existing code...

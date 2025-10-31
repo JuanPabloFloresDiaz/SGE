@@ -1,0 +1,10 @@
+-- Tabla de tipos de evaluación
+CREATE TABLE tipos_evaluacion (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  descripcion VARCHAR(255),
+  peso DECIMAL(5,2) DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL
+) ENGINE=InnoDB;

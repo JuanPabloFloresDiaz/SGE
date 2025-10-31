@@ -1,0 +1,15 @@
+-- Tabla de usuarios (profesores, administradores, etc.)
+CREATE TABLE usuarios (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  username VARCHAR(100) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  nombre VARCHAR(120),
+  email VARCHAR(150) UNIQUE,
+  telefono VARCHAR(30),
+  rol_id CHAR(36) NOT NULL,
+  activo TINYINT(1) NOT NULL DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;

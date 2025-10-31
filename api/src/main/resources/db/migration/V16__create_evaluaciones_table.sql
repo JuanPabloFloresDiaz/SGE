@@ -1,0 +1,15 @@
+-- Tabla de evaluaciones/actividades
+CREATE TABLE evaluaciones (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  curso_id CHAR(36) NOT NULL,
+  tipo_id CHAR(36) NOT NULL,
+  nombre VARCHAR(200) NOT NULL,
+  fecha DATE,
+  peso DECIMAL(5,2) DEFAULT 0,
+  publicado TINYINT(1) DEFAULT 0,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE,
+  FOREIGN KEY (tipo_id) REFERENCES tipos_evaluacion(id) ON DELETE RESTRICT
+) ENGINE=InnoDB;

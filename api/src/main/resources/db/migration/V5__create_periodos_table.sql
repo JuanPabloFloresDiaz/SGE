@@ -1,0 +1,11 @@
+-- Tabla de periodos/semestres
+CREATE TABLE periodos (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  nombre VARCHAR(100) NOT NULL,
+  fecha_inicio DATE,
+  fecha_fin DATE,
+  activo TINYINT(1) DEFAULT 1,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL
+) ENGINE=InnoDB;

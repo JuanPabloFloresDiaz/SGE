@@ -1,0 +1,12 @@
+-- Tabla de unidades de un curso
+CREATE TABLE unidades (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  curso_id CHAR(36) NOT NULL,
+  numero INT NULL,
+  titulo VARCHAR(200),
+  descripcion TEXT,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE
+) ENGINE=InnoDB;

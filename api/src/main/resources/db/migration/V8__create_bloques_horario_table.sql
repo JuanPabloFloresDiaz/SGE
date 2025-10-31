@@ -1,0 +1,10 @@
+-- Tabla de bloques de horario reutilizables
+CREATE TABLE bloques_horario (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  nombre VARCHAR(100),
+  inicio TIME NOT NULL,
+  fin TIME NOT NULL,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL
+) ENGINE=InnoDB;

@@ -1,0 +1,17 @@
+-- Tabla de sesiones de clase
+CREATE TABLE clases (
+  id CHAR(36) NOT NULL PRIMARY KEY,
+  curso_id CHAR(36) NOT NULL,
+  fecha DATE NOT NULL,
+  inicio TIME,
+  fin TIME,
+  unidad_id CHAR(36) NULL,
+  tema_id CHAR(36) NULL,
+  notas TEXT,
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  deleted_at DATETIME NULL DEFAULT NULL,
+  FOREIGN KEY (curso_id) REFERENCES cursos(id) ON DELETE CASCADE,
+  FOREIGN KEY (unidad_id) REFERENCES unidades(id) ON DELETE SET NULL,
+  FOREIGN KEY (tema_id) REFERENCES temas(id) ON DELETE SET NULL
+) ENGINE=InnoDB;
