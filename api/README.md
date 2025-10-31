@@ -10,6 +10,14 @@ API REST desarrollada con Spring Boot para la gestión de un sistema educativo.
 
 ## 🚀 Inicio Rápido
 
+### 0. Ejecución de Script start-dev.sh
+# Primera vez:
+```bash
+chmod +x start-dev.sh    # Dar permisos de ejecución
+./start-dev.sh           # Levantar MySQL
+mvn spring-boot:run      # Ejecutar la API
+```
+
 ### 1. Levantar la base de datos MySQL con Docker
 
 ```bash
@@ -67,6 +75,17 @@ La base de datos incluye las siguientes tablas:
 
 Las migraciones se ejecutan automáticamente con Flyway al iniciar la aplicación.
 Los archivos de migración están en: `src/main/resources/db/migration/`
+
+**⚠️ Importante sobre Flyway:**
+- Flyway **NO ejecuta dos veces** la misma migración
+- Mantiene un historial en la tabla `flyway_schema_history`
+- Puedes reiniciar la aplicación sin problemas
+- Solo ejecuta migraciones nuevas que no estén en el historial
+
+**Ver historial de migraciones:**
+```bash
+docker exec -it sge-mysql mysql -u root -proot -e "SELECT installed_rank, version, description, success FROM SGE.flyway_schema_history;"
+```
 
 ### Conectarse a MySQL directamente
 
@@ -159,3 +178,39 @@ Por defecto, la aplicación usa:
 - URL: `jdbc:mysql://localhost:3311/SGE`
 - Usuario: `root`
 - Password: `root`
+
+## ❓ Preguntas Frecuentes (FAQ)
+
+### ¿Puedo reiniciar la aplicación sin problemas?
+**Sí.** Flyway detecta automáticamente qué migraciones ya se ejecutaron y no las vuelve a ejecutar.
+
+### ¿Qué pasa si detengo y vuelvo a levantar MySQL?
+Los datos se mantienen en un volumen de Docker. Tus tablas y datos seguirán ahí.
+
+### ¿Cómo borro todos los datos y empiezo de cero?
+```bash
+docker-compose down -v  # ⚠️ CUIDADO: Esto borra TODOS los datos
+docker-compose up -d
+mvn spring-boot:run     # Flyway volverá a ejecutar todas las migraciones
+```
+
+### ¿Cómo agrego una nueva migración?
+1. Crea un nuevo archivo en `src/main/resources/db/migration/`
+2. Nómbralo siguiendo el patrón: `V20__descripcion.sql` (siguiente número)
+3. Al reiniciar la aplicación, Flyway la ejecutará automáticamente
+
+### ¿Puedo modificar una migración ya ejecutada?
+**No.** Flyway verifica los checksums. Si modificas una migración ejecutada, dará error.
+Solución: Crea una nueva migración con los cambios (V21, V22, etc.)
+
+### El puerto 3311 ya está en uso
+Cambia el puerto en `compose.yaml`:
+```yaml
+ports:
+  - '3312:3306'  # Cambia 3311 por otro puerto
+```
+Y actualiza `application.properties`:
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3312/SGE...
+```
+
