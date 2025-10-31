@@ -47,6 +47,39 @@ O desde tu IDE, ejecutar la clase `ApiApplication.java`
 
 La aplicación estará disponible en: `http://localhost:8080`
 
+### 5. Acceder a Swagger UI
+
+Una vez que la aplicación esté corriendo, accede a la documentación interactiva:
+
+**Swagger UI:** http://localhost:8080/swagger-ui.html
+
+**OpenAPI JSON:** http://localhost:8080/api-docs
+
+Desde Swagger UI podrás:
+- 📖 Ver todos los endpoints disponibles
+- 🧪 Probar los endpoints directamente desde el navegador
+- 📝 Ver los modelos de datos (DTOs)
+- 🔍 Ver descripciones detalladas de cada operación
+
+## 📚 Documentación de la API (Swagger)
+
+La API utiliza **SpringDoc OpenAPI 3** (Swagger) para documentación interactiva.
+
+### Endpoints de prueba disponibles:
+
+- `GET /api/health` - Verificar el estado de la API
+- `GET /api/info` - Información general de la API
+
+### Cómo usar Swagger UI:
+
+1. Abre http://localhost:8080/swagger-ui.html en tu navegador
+2. Verás todos los endpoints organizados por tags
+3. Haz clic en cualquier endpoint para ver detalles
+4. Usa el botón "Try it out" para probar el endpoint
+5. Los resultados se mostrarán directamente en el navegador
+
+📖 **Para más detalles sobre cómo documentar tus endpoints, consulta [SWAGGER_GUIDE.md](./SWAGGER_GUIDE.md)**
+
 ## 🗄️ Base de Datos
 
 ### Estructura
@@ -143,6 +176,8 @@ mvn clean package
 - Spring Boot 3.2.0
 - Spring Data JPA
 - Spring Web
+- Spring Validation
+- SpringDoc OpenAPI 3 (Swagger UI)
 - Flyway (migraciones de BD)
 - MySQL 8.0
 - Lombok
