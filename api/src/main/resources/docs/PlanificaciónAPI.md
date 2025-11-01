@@ -91,19 +91,47 @@ api/
 
 ---
 
-## 1. 🏷️ Roles (`/api/roles`)
+## 1. 🏷️ Roles (`/api/roles`) ✅ **COMPLETADO**
 
 ### Endpoints:
 
-| Método | Endpoint | Descripción | Estructura | Razón |
-|--------|----------|-------------|------------|-------|
-| GET | `/api/roles` | Listar todos los roles | 🟢 Spring/JPA | Lista pequeña, findAll() suficiente |
-| GET | `/api/roles/{id}` | Obtener rol por ID | 🟢 Spring/JPA | findById() - O(1) con índice |
-| POST | `/api/roles` | Crear nuevo rol | 🟢 Spring/JPA | save() estándar |
-| PUT | `/api/roles/{id}` | Actualizar rol | 🟢 Spring/JPA | save() con ID existente |
-| DELETE | `/api/roles/{id}` | Eliminación suave | 🟢 Spring/JPA | Actualizar deleted_at |
-| DELETE | `/api/roles/{id}/permanent` | Eliminación definitiva | 🟢 Spring/JPA | delete() de JPA |
-| GET | `/api/roles/search?nombre={nombre}` | Buscar por nombre | 🔷 Búsqueda Secuencial | Lista pequeña (<10), no necesita índice |
+| Estado | Método | Endpoint | Descripción | Estructura | Razón |
+|--------|--------|----------|-------------|------------|-------|
+| ✅ | GET | `/api/roles` | Listar todos los roles activos | 🟢 Spring/JPA | Lista pequeña, findAll() suficiente |
+| ✅ | GET | `/api/roles/{id}` | Obtener rol por ID | 🟢 Spring/JPA | findById() - O(1) con índice |
+| ✅ | POST | `/api/roles` | Crear nuevo rol | 🟢 Spring/JPA | save() estándar |
+| ✅ | PUT | `/api/roles/{id}` | Actualizar rol | 🟢 Spring/JPA | save() con ID existente |
+| ✅ | DELETE | `/api/roles/{id}` | Eliminación suave | 🟢 Spring/JPA | Actualizar deleted_at |
+| ✅ | DELETE | `/api/roles/{id}/permanent` | Eliminación definitiva | 🟢 Spring/JPA | delete() de JPA |
+| ✅ | GET | `/api/roles/search?nombre={nombre}` | Buscar por nombre | 🔷 Búsqueda Secuencial | Lista pequeña (<10), no necesita índice |
+| ✅ | GET | `/api/roles/deleted` | Listar roles eliminados | 🟢 Spring/JPA | Query con deletedAt IS NOT NULL |
+| ✅ | PATCH | `/api/roles/{id}/restore` | Restaurar rol eliminado | 🟢 Spring/JPA | Actualizar deleted_at a NULL |
+
+### 📊 Resumen de Implementación:
+- **Total de endpoints**: 9
+- **Implementados**: 9 ✅
+- **Pendientes**: 0
+- **Archivos creados**:
+  - ✅ `RolRepository.java` - Repositorio JPA con queries personalizadas
+  - ✅ `RolService.java` - Lógica de negocio con validaciones
+  - ✅ `RolController.java` - Controlador REST con Swagger
+  - ✅ `CreateRolRequest.java` - DTO Request (Java Record)
+  - ✅ `UpdateRolRequest.java` - DTO Request (Java Record)
+  - ✅ `RolResponse.java` - DTO Response (Java Record)
+  - ✅ `ResourceNotFoundException.java` - Excepción personalizada
+  - ✅ `DuplicateResourceException.java` - Excepción personalizada
+  - ✅ `GlobalExceptionHandler.java` - Manejador global de excepciones
+
+### 🎯 Características Implementadas:
+- ✅ CRUD completo
+- ✅ Soft delete con capacidad de restauración
+- ✅ Validaciones con Bean Validation (@NotBlank, @Size)
+- ✅ Búsqueda case-insensitive por nombre
+- ✅ Manejo de excepciones consistente
+- ✅ Documentación Swagger completa
+- ✅ DTOs con Java Records
+- ✅ Respuestas HTTP apropiadas (200, 201, 204, 404, 409)
+- ✅ Transacciones con @Transactional
 
 ---
 
