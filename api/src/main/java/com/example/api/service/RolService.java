@@ -14,17 +14,41 @@ import com.example.api.exception.ResourceNotFoundException;
 import com.example.api.model.Rol;
 import com.example.api.repository.RolRepository;
 
-import lombok.RequiredArgsConstructor;
-
 /**
  * Servicio que contiene la lógica de negocio para la gestión de roles.
  */
 @Service
-@RequiredArgsConstructor
 @Transactional
 public class RolService {
 
     private final RolRepository rolRepository;
+
+    /**
+     * Constructor con inyección de dependencias.
+     *
+     * @param rolRepository Repositorio de roles
+     */
+    public RolService(RolRepository rolRepository) {
+        this.rolRepository = rolRepository;
+    }
+
+    /**
+     * Convierte una entidad Rol a RolResponse.
+     * Método auxiliar para evitar problemas de Lombok en el IDE.
+     *
+     * @param rol La entidad Rol
+     * @return El DTO RolResponse
+     */
+    private RolResponse toResponse(Rol rol) {
+        return new RolResponse(
+                rol.getId(),
+                rol.getNombre(),
+                rol.getDescripcion(),
+                rol.getCreatedAt(),
+                rol.getUpdatedAt(),
+                rol.getDeletedAt()
+        );
+    }
 
     /**
      * Obtiene todos los roles activos.
@@ -35,7 +59,7 @@ public class RolService {
     public List<RolResponse> getAllRoles() {
         return rolRepository.findAllActive()
                 .stream()
-                .map(RolResponse::fromEntity)
+                .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -48,7 +72,7 @@ public class RolService {
     public List<RolResponse> getAllDeletedRoles() {
         return rolRepository.findAllDeleted()
                 .stream()
-                .map(RolResponse::fromEntity)
+                .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -68,7 +92,7 @@ public class RolService {
             throw new ResourceNotFoundException("Rol", "id", id);
         }
 
-        return RolResponse.fromEntity(rol);
+        return toResponse(rol);
     }
 
     /**
@@ -81,7 +105,7 @@ public class RolService {
     public List<RolResponse> searchRolesByNombre(String nombre) {
         return rolRepository.searchByNombre(nombre)
                 .stream()
-                .map(RolResponse::fromEntity)
+                .map(this::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -103,7 +127,7 @@ public class RolService {
         rol.setDescripcion(request.descripcion());
 
         Rol savedRol = rolRepository.save(rol);
-        return RolResponse.fromEntity(savedRol);
+        return toResponse(savedRol);
     }
 
     /**
@@ -137,7 +161,7 @@ public class RolService {
         }
 
         Rol updatedRol = rolRepository.save(rol);
-        return RolResponse.fromEntity(updatedRol);
+        return toResponse(updatedRol);
     }
 
     /**
@@ -174,7 +198,7 @@ public class RolService {
 
         rol.restore();
         Rol restoredRol = rolRepository.save(rol);
-        return RolResponse.fromEntity(restoredRol);
+        return toResponse(restoredRol);
     }
 
     /**

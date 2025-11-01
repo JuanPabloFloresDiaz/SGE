@@ -28,7 +28,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 
 /**
  * Controlador REST para la gestión de roles.
@@ -36,11 +35,19 @@ import lombok.RequiredArgsConstructor;
  */
 @RestController
 @RequestMapping("/api/roles")
-@RequiredArgsConstructor
 @Tag(name = "Roles", description = "API para la gestión de roles de usuario")
 public class RolController {
 
     private final RolService rolService;
+
+    /**
+     * Constructor con inyección de dependencias.
+     *
+     * @param rolService Servicio de roles
+     */
+    public RolController(RolService rolService) {
+        this.rolService = rolService;
+    }
 
     @Operation(
             summary = "Listar todos los roles activos",

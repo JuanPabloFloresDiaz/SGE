@@ -2,8 +2,6 @@ package com.example.api.dto.response;
 
 import java.time.LocalDateTime;
 
-import com.example.api.model.Rol;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
@@ -31,21 +29,5 @@ public record RolResponse(
         @Schema(description = "Fecha de eliminación (null si está activo)", example = "null")
         LocalDateTime deletedAt
 ) {
-
-    /**
-     * Convierte una entidad Rol a RolResponse.
-     *
-     * @param rol La entidad Rol
-     * @return El DTO RolResponse
-     */
-    public static RolResponse fromEntity(Rol rol) {
-        return new RolResponse(
-                rol.getId(),
-                rol.getNombre(),
-                rol.getDescripcion(),
-                rol.getCreatedAt(),
-                rol.getUpdatedAt(),
-                rol.getDeletedAt()
-        );
-    }
+    // El método fromEntity se movió a RolService para evitar problemas con Lombok en el IDE
 }
