@@ -135,28 +135,62 @@ api/
 
 ---
 
-## 2. 👤 Usuarios (`/api/usuarios`)
+## 2. 👤 Usuarios (`/api/usuarios`) ✅ **COMPLETADO**
 
 ### Endpoints:
 
-| Método | Endpoint | Descripción | Estructura | Razón |
-|--------|----------|-------------|------------|-------|
-| GET | `/api/usuarios` | Listar todos los usuarios | 🟢 Spring/JPA | Paginación con PageRequest |
-| GET | `/api/usuarios/{id}` | Obtener usuario por ID | 🟢 Spring/JPA | findById() |
-| POST | `/api/usuarios` | Crear nuevo usuario | 🟢 Spring/JPA | save() + hash password |
-| PUT | `/api/usuarios/{id}` | Actualizar usuario | 🟢 Spring/JPA | save() |
-| DELETE | `/api/usuarios/{id}` | Eliminación suave | 🟢 Spring/JPA | deleted_at |
-| DELETE | `/api/usuarios/{id}/permanent` | Eliminación definitiva | 🟢 Spring/JPA | delete() |
-| GET | `/api/usuarios/search?username={user}` | Buscar por username | 🟢 Spring/JPA | Query method con índice UNIQUE |
-| GET | `/api/usuarios/email/{email}` | Buscar por email | 🟢 Spring/JPA | Query method con índice UNIQUE |
-| GET | `/api/usuarios/rol/{rolId}` | Usuarios por rol | 🟢 Spring/JPA | findByRolId() con índice FK |
-| GET | `/api/usuarios/activos` | Solo usuarios activos | 🟢 Spring/JPA | findByActivoTrue() |
-| POST | `/api/usuarios/login` | Autenticación | 🟠 Tabla Hash | Caché de sesiones en HashMap |
-| GET | `/api/usuarios/{id}/historial` | Historial de acciones | 🔵 Lista Ligada | Inserciones frecuentes al inicio |
+| Estado | Método | Endpoint | Descripción | Estructura | Razón |
+|--------|--------|----------|-------------|------------|-------|
+| ✅ | GET | `/api/usuarios` | Listar todos los usuarios | 🟢 Spring/JPA | Paginación con PageRequest |
+| ✅ | GET | `/api/usuarios/{id}` | Obtener usuario por ID | 🟢 Spring/JPA | findById() |
+| ✅ | POST | `/api/usuarios` | Crear nuevo usuario | 🟢 Spring/JPA | save() + hash password |
+| ✅ | PUT | `/api/usuarios/{id}` | Actualizar usuario | 🟢 Spring/JPA | save() |
+| ✅ | DELETE | `/api/usuarios/{id}` | Eliminación suave | 🟢 Spring/JPA | deleted_at |
+| ✅ | DELETE | `/api/usuarios/{id}/permanent` | Eliminación definitiva | 🟢 Spring/JPA | delete() |
+| ✅ | GET | `/api/usuarios/search?username={user}` | Buscar por username | 🟢 Spring/JPA | Query method con índice UNIQUE |
+| ✅ | GET | `/api/usuarios/email/{email}` | Buscar por email | 🟢 Spring/JPA | Query method con índice UNIQUE |
+| ✅ | GET | `/api/usuarios/rol/{rolId}` | Usuarios por rol | 🟢 Spring/JPA | findByRolId() con índice FK |
+| ✅ | GET | `/api/usuarios/activos` | Solo usuarios activos | 🟢 Spring/JPA | findByActivoTrue() |
+| ✅ | GET | `/api/usuarios/search/nombre?nombre={nombre}` | Buscar por nombre | 🟢 Spring/JPA | Query con LIKE case-insensitive |
+| ✅ | GET | `/api/usuarios/deleted` | Listar usuarios eliminados | 🟢 Spring/JPA | Query con deletedAt IS NOT NULL |
+| ✅ | PATCH | `/api/usuarios/{id}/restore` | Restaurar usuario eliminado | � Spring/JPA | Actualizar deleted_at a NULL |
+
+### 📊 Resumen de Implementación:
+- **Total de endpoints**: 13
+- **Implementados**: 13 ✅
+- **Pendientes**: 0
+- **Archivos creados**:
+  - ✅ `CreateUsuarioRequest.java` - DTO para creación con validaciones robustas
+  - ✅ `UpdateUsuarioRequest.java` - DTO para actualización parcial
+  - ✅ `UsuarioResponse.java` - DTO de respuesta (sin password_hash)
+  - ✅ `UsuarioRepository.java` - Repositorio JPA con queries personalizadas
+  - ✅ `UsuarioService.java` - Servicio con lógica de negocio y encriptación
+  - ✅ `UsuarioController.java` - Controlador REST completo
+  - ✅ `SecurityConfig.java` - Configuración de Spring Security con BCrypt
+
+### 🎯 Características Implementadas:
+- ✅ CRUD completo
+- ✅ Encriptación de contraseñas con BCrypt
+- ✅ Soft delete con capacidad de restauración
+- ✅ Validaciones avanzadas (email, username pattern, password strength)
+- ✅ Búsquedas múltiples (username, email, nombre, rol)
+- ✅ Paginación opcional en listado
+- ✅ Filtro de usuarios activos
+- ✅ Manejo de excepciones consistente
+- ✅ Documentación Swagger completa
+- ✅ DTOs con Java Records
+- ✅ Respuestas HTTP apropiadas (200, 201, 204, 404, 409)
+- ✅ Transacciones con @Transactional
+- ✅ Validación de unicidad de username y email
+- ✅ Validación de existencia de rol al crear/actualizar
+
+**Nota sobre login y historial:**
+- El endpoint `/api/usuarios/login` se implementará en una fase posterior con JWT
+- El endpoint `/api/usuarios/{id}/historial` se implementará cuando se defina la entidad de auditoría
 
 **Razón uso de estructuras:**
-- **HashMap (login)**: Almacenar sesiones activas en memoria para acceso O(1)
-- **Lista Ligada (historial)**: Agregar acciones al inicio sin redimensionar
+- **HashMap (login)**: Se implementará en versión futura para caché de sesiones
+- **Lista Ligada (historial)**: Se implementará con entidad de Auditoría
 
 ---
 
