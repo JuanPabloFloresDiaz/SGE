@@ -153,7 +153,7 @@ api/
 | ✅ | GET | `/api/usuarios/activos` | Solo usuarios activos | 🟢 Spring/JPA | findByActivoTrue() |
 | ✅ | GET | `/api/usuarios/search/nombre?nombre={nombre}` | Buscar por nombre | 🟢 Spring/JPA | Query con LIKE case-insensitive |
 | ✅ | GET | `/api/usuarios/deleted` | Listar usuarios eliminados | 🟢 Spring/JPA | Query con deletedAt IS NOT NULL |
-| ✅ | PATCH | `/api/usuarios/{id}/restore` | Restaurar usuario eliminado | � Spring/JPA | Actualizar deleted_at a NULL |
+| ✅ | PATCH | `/api/usuarios/{id}/restore` | Restaurar usuario eliminado | 🟢 Spring/JPA | Actualizar deleted_at a NULL |
 
 ### 📊 Resumen de Implementación:
 - **Total de endpoints**: 13
@@ -194,31 +194,67 @@ api/
 
 ---
 
-## 3. 🎓 Estudiantes (`/api/estudiantes`)
+## 3. 🎓 Estudiantes (`/api/estudiantes`) ✅ **COMPLETADO (Básico JPA)**
 
 ### Endpoints:
 
-| Método | Endpoint | Descripción | Estructura | Razón |
-|--------|----------|-------------|------------|-------|
-| GET | `/api/estudiantes` | Listar todos | 🟢 Spring/JPA | Paginación estándar |
-| GET | `/api/estudiantes/{id}` | Obtener por ID | 🟢 Spring/JPA | findById() |
-| POST | `/api/estudiantes` | Crear estudiante | 🟢 Spring/JPA | save() |
-| PUT | `/api/estudiantes/{id}` | Actualizar | 🟢 Spring/JPA | save() |
-| DELETE | `/api/estudiantes/{id}` | Eliminación suave | 🟢 Spring/JPA | deleted_at |
-| DELETE | `/api/estudiantes/{id}/permanent` | Eliminación definitiva | 🟢 Spring/JPA | delete() |
-| GET | `/api/estudiantes/codigo/{codigo}` | Buscar por código | 🟢 Spring/JPA | findByCodigo() con UNIQUE |
-| GET | `/api/estudiantes/search?nombre={nombre}` | Buscar por nombre | 🔷 Búsqueda Secuencial | Sin índice, búsqueda like '%nombre%' |
-| GET | `/api/estudiantes/ranking` | Ranking por promedio | 🟡 Árbol BST | Ordenamiento eficiente por calificación |
-| GET | `/api/estudiantes/ranking/top/{n}` | Top N estudiantes | 🟡 Árbol BST | In-order traversal descendente |
-| GET | `/api/estudiantes/{id}/cursos-disponibles` | Cursos que puede tomar | 🔴 Grafo | Verificar prerrequisitos completados |
-| GET | `/api/estudiantes/{id}/ruta-aprendizaje` | Ruta óptima de cursos | 🔴 Grafo (Dijkstra) | Camino más corto considerando prerrequisitos |
-| GET | `/api/estudiantes/genero/{genero}` | Filtrar por género | 🟢 Spring/JPA | findByGenero() |
-| GET | `/api/estudiantes/activos` | Solo activos | 🟢 Spring/JPA | findByActivoTrue() |
+| Estado | Método | Endpoint | Descripción | Estructura | Razón |
+|--------|--------|----------|-------------|------------|-------|
+| ✅ | GET | `/api/estudiantes` | Listar todos | 🟢 Spring/JPA | Paginación estándar |
+| ✅ | GET | `/api/estudiantes/{id}` | Obtener por ID | 🟢 Spring/JPA | findById() |
+| ✅ | POST | `/api/estudiantes` | Crear estudiante | 🟢 Spring/JPA | save() |
+| ✅ | PUT | `/api/estudiantes/{id}` | Actualizar | 🟢 Spring/JPA | save() |
+| ✅ | DELETE | `/api/estudiantes/{id}` | Eliminación suave | 🟢 Spring/JPA | deleted_at |
+| ✅ | DELETE | `/api/estudiantes/{id}/permanent` | Eliminación definitiva | 🟢 Spring/JPA | delete() |
+| ✅ | GET | `/api/estudiantes/codigo/{codigo}` | Buscar por código | 🟢 Spring/JPA | findByCodigo() con UNIQUE |
+| ⏳ | GET | `/api/estudiantes/search?nombre={nombre}` | Buscar por nombre | 🔷 Búsqueda Secuencial | Sin índice, búsqueda like '%nombre%' |
+| ⏳ | GET | `/api/estudiantes/ranking` | Ranking por promedio | 🟡 Árbol BST | Ordenamiento eficiente por calificación |
+| ⏳ | GET | `/api/estudiantes/ranking/top/{n}` | Top N estudiantes | 🟡 Árbol BST | In-order traversal descendente |
+| ⏳ | GET | `/api/estudiantes/{id}/cursos-disponibles` | Cursos que puede tomar | 🔴 Grafo | Verificar prerrequisitos completados |
+| ⏳ | GET | `/api/estudiantes/{id}/ruta-aprendizaje` | Ruta óptima de cursos | 🔴 Grafo (Dijkstra) | Camino más corto considerando prerrequisitos |
+| ✅ | GET | `/api/estudiantes/genero/{genero}` | Filtrar por género | 🟢 Spring/JPA | findByGenero() |
+| ✅ | GET | `/api/estudiantes/activos` | Solo activos | 🟢 Spring/JPA | findByActivoTrue() |
 
-**Razón uso de estructuras:**
+### 📊 Resumen de Implementación:
+- **Total de endpoints**: 14
+- **Implementados (JPA)**: 9 ✅
+- **Pendientes (Estructuras personalizadas)**: 5 ⏳
+- **Archivos creados**:
+  - ✅ `EstudianteRepository.java` - Repositorio JPA con queries personalizadas
+  - ✅ `CreateEstudianteRequest.java` - DTO para creación con validaciones
+  - ✅ `UpdateEstudianteRequest.java` - DTO para actualización parcial
+  - ✅ `EstudianteResponse.java` - DTO para respuestas con datos anidados
+  - ✅ `EstudianteService.java` - Lógica de negocio con Spring/JPA
+  - ✅ `EstudianteController.java` - 9 endpoints REST documentados
+
+### 🎯 Características Implementadas:
+- ✅ CRUD completo con Spring/JPA
+- ✅ Soft delete con capacidad de restauración
+- ✅ Validaciones con Bean Validation
+- ✅ Búsqueda por código único (índice UNIQUE)
+- ✅ Filtros por género y estado activo
+- ✅ Paginación en listado general
+- ✅ Manejo de excepciones consistente
+- ✅ Documentación Swagger completa
+- ✅ DTOs con Java Records
+- ✅ Respuestas HTTP apropiadas (200, 201, 204, 404, 409)
+- ✅ Transacciones con @Transactional
+- ✅ Validación de usuario existente al crear
+- ✅ Validación de unicidad de código
+- ✅ Valores por defecto (genero=O, ingreso=now, activo=true)
+
+### ⏳ Pendientes (Implementación futura con estructuras personalizadas):
+- **Búsqueda Secuencial** 🔷: GET `/api/estudiantes/search?nombre={nombre}` - O(n)
+- **Árbol BST** 🟡: GET `/api/estudiantes/ranking` - Ranking por promedio
+- **Árbol BST** 🟡: GET `/api/estudiantes/ranking/top/{n}` - Top N estudiantes
+- **Grafo (BFS)** 🔴: GET `/api/estudiantes/{id}/cursos-disponibles` - O(V+E)
+- **Grafo (Dijkstra)** 🔴: GET `/api/estudiantes/{id}/ruta-aprendizaje` - O((V+E)log V)
+
+**Razón uso de estructuras personalizadas (pendientes):**
 - **BST (ranking)**: Mantener estudiantes ordenados por promedio, búsqueda O(log n)
 - **Grafo (cursos disponibles)**: Verificar prerrequisitos usando BFS/DFS
 - **Dijkstra (ruta óptima)**: Encontrar secuencia de cursos más eficiente
+- **Búsqueda Secuencial**: Demostrar algoritmo O(n) para búsqueda de texto
 
 ---
 
