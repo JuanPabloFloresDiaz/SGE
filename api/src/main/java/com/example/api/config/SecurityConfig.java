@@ -11,7 +11,8 @@ import org.springframework.security.web.SecurityFilterChain;
 /**
  * Configuración de seguridad de Spring Security.
  * Por ahora, permite el acceso a todos los endpoints sin autenticación.
- * TODO: Implementar autenticación JWT en versiones futuras.
+ * El endpoint de login genera tokens JWT, pero no se validan en las peticiones.
+ * TODO: Implementar validación de JWT con filtros en versiones futuras.
  */
 @Configuration
 @EnableWebSecurity
@@ -30,7 +31,9 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable()) // Deshabilitar CSRF para APIs REST
                 .authorizeHttpRequests(auth -> auth
-                        .anyRequest().permitAll() // Permitir todas las peticiones por ahora
+                        .requestMatchers("/api/auth/**").permitAll() // Permitir endpoints de autenticación
+                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll() // Permitir Swagger
+                        .anyRequest().permitAll() // Permitir todas las demás peticiones por ahora
                 );
 
         return http.build();
