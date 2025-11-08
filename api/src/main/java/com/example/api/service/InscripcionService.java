@@ -243,7 +243,7 @@ public class InscripcionService {
         // Validar cupo disponible
         Long inscritosCount = inscripcionRepository.findByCursoId(request.cursoId())
                 .stream()
-                .filter(i -> i.getEstado() == EstadoInscripcion.INSCRITO)
+                .filter(i -> i.getEstado() == EstadoInscripcion.inscrito)
                 .count();
 
         if (inscritosCount >= curso.getCupo()) {
@@ -255,7 +255,7 @@ public class InscripcionService {
         inscripcion.setEstudiante(estudiante);
         inscripcion.setFechaInscripcion(request.fechaInscripcion() != null ? 
                 request.fechaInscripcion() : LocalDate.now());
-        inscripcion.setEstado(request.estado() != null ? request.estado() : EstadoInscripcion.INSCRITO);
+        inscripcion.setEstado(request.estado() != null ? request.estado() : EstadoInscripcion.inscrito);
 
         Inscripcion savedInscripcion = inscripcionRepository.save(inscripcion);
         return toResponse(savedInscripcion);
