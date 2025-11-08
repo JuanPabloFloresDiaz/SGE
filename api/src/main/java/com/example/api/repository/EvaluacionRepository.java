@@ -26,7 +26,7 @@ public interface EvaluacionRepository extends JpaRepository<Evaluacion, String> 
      * @param pageable Configuración de paginación
      * @return Página de evaluaciones activas
      */
-    @Query("SELECT e FROM Evaluacion e WHERE e.deletedAt IS NULL")
+    @Query("SELECT e FROM Evaluacion e WHERE e.deletedAt IS NULL ORDER BY e.fecha DESC")
     Page<Evaluacion> findAllActive(Pageable pageable);
 
     /**
@@ -34,7 +34,7 @@ public interface EvaluacionRepository extends JpaRepository<Evaluacion, String> 
      *
      * @return Lista de evaluaciones activas
      */
-    @Query("SELECT e FROM Evaluacion e WHERE e.deletedAt IS NULL")
+    @Query("SELECT e FROM Evaluacion e WHERE e.deletedAt IS NULL ORDER BY e.fecha DESC")
     List<Evaluacion> findAllActive();
 
     /**
