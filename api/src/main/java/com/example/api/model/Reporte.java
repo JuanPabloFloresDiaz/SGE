@@ -35,7 +35,7 @@ public class Reporte extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo", length = 9)
-    private TipoReporte tipo = TipoReporte.OTRO;
+    private TipoReporte tipo = TipoReporte.otro;
 
     @Column(name = "titulo", length = 200)
     private String titulo;
@@ -52,8 +52,8 @@ public class Reporte extends BaseEntity {
      * Enum para el tipo de reporte
      */
     public enum TipoReporte {
-        CONDUCTA,
-        ACADEMICO,
-        OTRO
+        conducta,
+        academico,
+        otro
     }
 }
