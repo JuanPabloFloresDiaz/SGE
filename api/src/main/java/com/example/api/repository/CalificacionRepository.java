@@ -26,7 +26,7 @@ public interface CalificacionRepository extends JpaRepository<Calificacion, Stri
      * @param pageable Configuración de paginación
      * @return Página de calificaciones activas
      */
-    @Query("SELECT c FROM Calificacion c WHERE c.deletedAt IS NULL")
+    @Query("SELECT c FROM Calificacion c WHERE c.deletedAt IS NULL ORDER BY c.createdAt DESC")
     Page<Calificacion> findAllActive(Pageable pageable);
 
     /**
@@ -34,7 +34,7 @@ public interface CalificacionRepository extends JpaRepository<Calificacion, Stri
      *
      * @return Lista de calificaciones activas
      */
-    @Query("SELECT c FROM Calificacion c WHERE c.deletedAt IS NULL")
+    @Query("SELECT c FROM Calificacion c WHERE c.deletedAt IS NULL ORDER BY c.createdAt DESC")
     List<Calificacion> findAllActive();
 
     /**
