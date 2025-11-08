@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -71,7 +71,11 @@ public class ProfesorController {
             )
     })
     public ResponseEntity<Page<ProfesorResponse>> getAllProfesores(
-            @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
+            @Parameter(description = "Número de página (inicia en 0)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Tamaño de página", example = "10")
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
         Page<ProfesorResponse> profesores = profesorService.getAllProfesores(pageable);
         return ResponseEntity.ok(profesores);
     }
