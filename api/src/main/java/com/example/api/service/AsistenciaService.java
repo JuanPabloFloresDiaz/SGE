@@ -397,17 +397,17 @@ public class AsistenciaService {
         
         int totalClases = asistencias.size();
         double porcentajeAsistencia = totalClases > 0 
-                ? (conteoEstados.get(EstadoAsistencia.PRESENTE) + conteoEstados.get(EstadoAsistencia.TARDE)) * 100.0 / totalClases
+                ? (conteoEstados.get(EstadoAsistencia.presente) + conteoEstados.get(EstadoAsistencia.tarde)) * 100.0 / totalClases
                 : 0.0;
         
         // Construir respuesta
         Map<String, Object> estadisticas = new HashMap<>();
         estadisticas.put("estudianteId", estudianteId);
         estadisticas.put("totalClases", totalClases);
-        estadisticas.put("presente", conteoEstados.get(EstadoAsistencia.PRESENTE));
-        estadisticas.put("ausente", conteoEstados.get(EstadoAsistencia.AUSENTE));
-        estadisticas.put("tarde", conteoEstados.get(EstadoAsistencia.TARDE));
-        estadisticas.put("justificado", conteoEstados.get(EstadoAsistencia.JUSTIFICADO));
+        estadisticas.put("presente", conteoEstados.get(EstadoAsistencia.presente));
+        estadisticas.put("ausente", conteoEstados.get(EstadoAsistencia.ausente));
+        estadisticas.put("tarde", conteoEstados.get(EstadoAsistencia.tarde));
+        estadisticas.put("justificado", conteoEstados.get(EstadoAsistencia.justificado));
         estadisticas.put("porcentajeAsistencia", Math.round(porcentajeAsistencia * 100.0) / 100.0);
         
         return estadisticas;
