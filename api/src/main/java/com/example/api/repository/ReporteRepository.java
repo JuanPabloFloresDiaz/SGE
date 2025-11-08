@@ -26,7 +26,7 @@ public interface ReporteRepository extends JpaRepository<Reporte, String> {
      * @param pageable Configuración de paginación
      * @return Página de reportes activos
      */
-    @Query("SELECT r FROM Reporte r WHERE r.deletedAt IS NULL")
+    @Query("SELECT r FROM Reporte r WHERE r.deletedAt IS NULL ORDER BY r.createdAt DESC")
     Page<Reporte> findAllActive(Pageable pageable);
 
     /**
@@ -34,7 +34,7 @@ public interface ReporteRepository extends JpaRepository<Reporte, String> {
      *
      * @return Lista de reportes activos
      */
-    @Query("SELECT r FROM Reporte r WHERE r.deletedAt IS NULL")
+    @Query("SELECT r FROM Reporte r WHERE r.deletedAt IS NULL ORDER BY r.createdAt DESC")
     List<Reporte> findAllActive();
 
     /**
