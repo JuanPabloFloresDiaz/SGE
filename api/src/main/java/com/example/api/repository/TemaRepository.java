@@ -25,7 +25,7 @@ public interface TemaRepository extends JpaRepository<Tema, String> {
      * @param pageable Configuración de paginación
      * @return Página de temas activos
      */
-    @Query("SELECT t FROM Tema t WHERE t.deletedAt IS NULL")
+    @Query("SELECT t FROM Tema t WHERE t.deletedAt IS NULL ORDER BY t.titulo ASC")
     Page<Tema> findAllActive(Pageable pageable);
 
     /**
@@ -33,7 +33,7 @@ public interface TemaRepository extends JpaRepository<Tema, String> {
      *
      * @return Lista de temas activos
      */
-    @Query("SELECT t FROM Tema t WHERE t.deletedAt IS NULL")
+    @Query("SELECT t FROM Tema t WHERE t.deletedAt IS NULL ORDER BY t.titulo ASC")
     List<Tema> findAllActive();
 
     /**
