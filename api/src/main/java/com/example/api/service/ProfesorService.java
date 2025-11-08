@@ -174,7 +174,7 @@ public class ProfesorService {
         profesor.setEspecialidad(request.especialidad());
         
         // Establecer valores por defecto
-        profesor.setContrato(request.contrato() != null ? request.contrato() : TipoContrato.EVENTUAL);
+        profesor.setContrato(request.contrato() != null ? request.contrato() : TipoContrato.eventual);
         profesor.setActivo(request.activo() != null ? request.activo() : true);
 
         // Guardar
