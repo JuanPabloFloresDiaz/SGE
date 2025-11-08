@@ -25,7 +25,7 @@ public interface CursoRepository extends JpaRepository<Curso, String> {
      * @param pageable Configuración de paginación
      * @return Página de cursos activos
      */
-    @Query("SELECT c FROM Curso c WHERE c.deletedAt IS NULL")
+    @Query("SELECT c FROM Curso c WHERE c.deletedAt IS NULL ORDER BY c.nombreGrupo ASC")
     Page<Curso> findAllActive(Pageable pageable);
 
     /**
@@ -33,7 +33,7 @@ public interface CursoRepository extends JpaRepository<Curso, String> {
      *
      * @return Lista de cursos activos
      */
-    @Query("SELECT c FROM Curso c WHERE c.deletedAt IS NULL")
+    @Query("SELECT c FROM Curso c WHERE c.deletedAt IS NULL ORDER BY c.nombreGrupo ASC")
     List<Curso> findAllActive();
 
     /**
