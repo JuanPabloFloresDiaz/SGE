@@ -215,7 +215,7 @@ public class HorarioCursoService {
         horario.setBloqueHorario(bloque);
         horario.setDia(request.dia());
         horario.setAula(request.aula());
-        horario.setTipo(request.tipo() != null ? request.tipo() : TipoHorario.REGULAR);
+        horario.setTipo(request.tipo() != null ? request.tipo() : TipoHorario.regular);
 
         HorarioCurso savedHorario = horarioCursoRepository.save(horario);
         return toResponse(savedHorario);
