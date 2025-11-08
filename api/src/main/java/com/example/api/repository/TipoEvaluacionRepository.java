@@ -26,7 +26,7 @@ public interface TipoEvaluacionRepository extends JpaRepository<TipoEvaluacion, 
      * @param pageable Configuración de paginación
      * @return Página de tipos de evaluación activos
      */
-    @Query("SELECT t FROM TipoEvaluacion t WHERE t.deletedAt IS NULL")
+    @Query("SELECT t FROM TipoEvaluacion t WHERE t.deletedAt IS NULL ORDER BY t.nombre ASC")
     Page<TipoEvaluacion> findAllActive(Pageable pageable);
 
     /**
@@ -34,7 +34,7 @@ public interface TipoEvaluacionRepository extends JpaRepository<TipoEvaluacion, 
      *
      * @return Lista de tipos de evaluación activos
      */
-    @Query("SELECT t FROM TipoEvaluacion t WHERE t.deletedAt IS NULL")
+    @Query("SELECT t FROM TipoEvaluacion t WHERE t.deletedAt IS NULL ORDER BY t.nombre ASC")
     List<TipoEvaluacion> findAllActive();
 
     /**
