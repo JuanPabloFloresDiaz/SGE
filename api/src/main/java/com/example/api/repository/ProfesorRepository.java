@@ -25,7 +25,7 @@ public interface ProfesorRepository extends JpaRepository<Profesor, String> {
      * @param pageable Configuración de paginación
      * @return Página de profesores activos
      */
-    @Query("SELECT p FROM Profesor p WHERE p.deletedAt IS NULL")
+    @Query("SELECT p FROM Profesor p WHERE p.deletedAt IS NULL ORDER BY p.especialidad ASC")
     Page<Profesor> findAllActive(Pageable pageable);
 
     /**
@@ -33,7 +33,7 @@ public interface ProfesorRepository extends JpaRepository<Profesor, String> {
      *
      * @return Lista de profesores activos
      */
-    @Query("SELECT p FROM Profesor p WHERE p.deletedAt IS NULL")
+    @Query("SELECT p FROM Profesor p WHERE p.deletedAt IS NULL ORDER BY p.especialidad ASC")
     List<Profesor> findAllActive();
 
     /**
