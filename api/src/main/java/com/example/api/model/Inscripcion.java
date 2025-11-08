@@ -38,14 +38,14 @@ public class Inscripcion extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", length = 11)
-    private EstadoInscripcion estado = EstadoInscripcion.INSCRITO;
+    private EstadoInscripcion estado = EstadoInscripcion.inscrito;
 
     /**
      * Enum para el estado de la inscripción
      */
     public enum EstadoInscripcion {
-        INSCRITO,
-        RETIRADO,
-        COMPLETADO
+        inscrito,
+        retirado,
+        completado
     }
 }
