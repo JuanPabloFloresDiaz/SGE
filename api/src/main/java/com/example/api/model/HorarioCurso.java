@@ -41,7 +41,7 @@ public class HorarioCurso extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "tipo", length = 11)
-    private TipoHorario tipo = TipoHorario.REGULAR;
+    private TipoHorario tipo = TipoHorario.regular;
 
     /**
      * Enum para los días de la semana
@@ -60,9 +60,9 @@ public class HorarioCurso extends BaseEntity {
      * Enum para el tipo de horario
      */
     public enum TipoHorario {
-        REGULAR,
-        LABORATORIO,
-        TALLER,
-        OTRO
+        regular,
+        laboratorio,
+        taller,
+        otro
     }
 }
