@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -54,7 +54,11 @@ public class CursoController {
                     content = @Content(schema = @Schema(implementation = Page.class)))
     })
     public ResponseEntity<Page<CursoResponse>> getAllCursos(
-            @PageableDefault(size = 10, sort = "nombreGrupo") Pageable pageable) {
+            @Parameter(description = "Número de página (inicia en 0)", example = "0")
+            @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Tamaño de página", example = "10")
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
         return ResponseEntity.ok(cursoService.getAllCursos(pageable));
     }
 
