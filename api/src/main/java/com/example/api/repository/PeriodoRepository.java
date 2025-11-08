@@ -27,7 +27,7 @@ public interface PeriodoRepository extends JpaRepository<Periodo, String> {
      * @param pageable Configuración de paginación
      * @return Página de periodos activos
      */
-    @Query("SELECT p FROM Periodo p WHERE p.deletedAt IS NULL")
+    @Query("SELECT p FROM Periodo p WHERE p.deletedAt IS NULL ORDER BY p.fechaInicio DESC")
     Page<Periodo> findAllActive(Pageable pageable);
 
     /**
@@ -35,7 +35,7 @@ public interface PeriodoRepository extends JpaRepository<Periodo, String> {
      *
      * @return Lista de periodos activos
      */
-    @Query("SELECT p FROM Periodo p WHERE p.deletedAt IS NULL")
+    @Query("SELECT p FROM Periodo p WHERE p.deletedAt IS NULL ORDER BY p.fechaInicio DESC")
     List<Periodo> findAllActive();
 
     /**
