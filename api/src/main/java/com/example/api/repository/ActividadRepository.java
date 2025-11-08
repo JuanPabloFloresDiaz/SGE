@@ -26,7 +26,7 @@ public interface ActividadRepository extends JpaRepository<Actividad, String> {
      * @param pageable Configuración de paginación
      * @return Página de actividades activas
      */
-    @Query("SELECT a FROM Actividad a WHERE a.deletedAt IS NULL")
+    @Query("SELECT a FROM Actividad a WHERE a.deletedAt IS NULL ORDER BY a.fechaApertura DESC")
     Page<Actividad> findAllActive(Pageable pageable);
 
     /**
@@ -34,7 +34,7 @@ public interface ActividadRepository extends JpaRepository<Actividad, String> {
      *
      * @return Lista de actividades activas
      */
-    @Query("SELECT a FROM Actividad a WHERE a.deletedAt IS NULL")
+    @Query("SELECT a FROM Actividad a WHERE a.deletedAt IS NULL ORDER BY a.fechaApertura DESC")
     List<Actividad> findAllActive();
 
     /**
