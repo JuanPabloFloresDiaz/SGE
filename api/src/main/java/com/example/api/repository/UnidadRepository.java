@@ -25,7 +25,7 @@ public interface UnidadRepository extends JpaRepository<Unidad, String> {
      * @param pageable Configuración de paginación
      * @return Página de unidades activas
      */
-    @Query("SELECT u FROM Unidad u WHERE u.deletedAt IS NULL")
+    @Query("SELECT u FROM Unidad u WHERE u.deletedAt IS NULL ORDER BY u.numero ASC")
     Page<Unidad> findAllActive(Pageable pageable);
 
     /**
@@ -33,7 +33,7 @@ public interface UnidadRepository extends JpaRepository<Unidad, String> {
      *
      * @return Lista de unidades activas
      */
-    @Query("SELECT u FROM Unidad u WHERE u.deletedAt IS NULL")
+    @Query("SELECT u FROM Unidad u WHERE u.deletedAt IS NULL ORDER BY u.numero ASC")
     List<Unidad> findAllActive();
 
     /**
