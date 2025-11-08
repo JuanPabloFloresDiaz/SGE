@@ -26,7 +26,7 @@ public interface ClaseRepository extends JpaRepository<Clase, String> {
      * @param pageable Configuración de paginación
      * @return Página de clases activas
      */
-    @Query("SELECT c FROM Clase c WHERE c.deletedAt IS NULL")
+    @Query("SELECT c FROM Clase c WHERE c.deletedAt IS NULL ORDER BY c.fecha DESC, c.inicio ASC")
     Page<Clase> findAllActive(Pageable pageable);
 
     /**
@@ -34,7 +34,7 @@ public interface ClaseRepository extends JpaRepository<Clase, String> {
      *
      * @return Lista de clases activas
      */
-    @Query("SELECT c FROM Clase c WHERE c.deletedAt IS NULL")
+    @Query("SELECT c FROM Clase c WHERE c.deletedAt IS NULL ORDER BY c.fecha DESC, c.inicio ASC")
     List<Clase> findAllActive();
 
     /**
