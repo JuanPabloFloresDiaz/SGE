@@ -26,7 +26,7 @@ public interface AsignaturaRepository extends JpaRepository<Asignatura, String> 
      * @param pageable Configuración de paginación
      * @return Página de asignaturas activas
      */
-    @Query("SELECT a FROM Asignatura a WHERE a.deletedAt IS NULL")
+    @Query("SELECT a FROM Asignatura a WHERE a.deletedAt IS NULL ORDER BY a.nombre ASC")
     Page<Asignatura> findAllActive(Pageable pageable);
 
     /**
@@ -34,7 +34,7 @@ public interface AsignaturaRepository extends JpaRepository<Asignatura, String> 
      *
      * @return Lista de asignaturas activas
      */
-    @Query("SELECT a FROM Asignatura a WHERE a.deletedAt IS NULL")
+    @Query("SELECT a FROM Asignatura a WHERE a.deletedAt IS NULL ORDER BY a.nombre ASC")
     List<Asignatura> findAllActive();
 
     /**
