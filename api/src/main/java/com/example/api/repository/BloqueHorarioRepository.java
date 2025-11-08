@@ -24,7 +24,7 @@ public interface BloqueHorarioRepository extends JpaRepository<BloqueHorario, St
      * @param pageable Configuración de paginación
      * @return Página de bloques activos
      */
-    @Query("SELECT b FROM BloqueHorario b WHERE b.deletedAt IS NULL")
+    @Query("SELECT b FROM BloqueHorario b WHERE b.deletedAt IS NULL ORDER BY b.inicio ASC")
     Page<BloqueHorario> findAllActive(Pageable pageable);
 
     /**
@@ -32,7 +32,7 @@ public interface BloqueHorarioRepository extends JpaRepository<BloqueHorario, St
      *
      * @return Lista de bloques activos
      */
-    @Query("SELECT b FROM BloqueHorario b WHERE b.deletedAt IS NULL")
+    @Query("SELECT b FROM BloqueHorario b WHERE b.deletedAt IS NULL ORDER BY b.inicio ASC")
     List<BloqueHorario> findAllActive();
 
     /**
