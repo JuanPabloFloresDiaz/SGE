@@ -26,7 +26,7 @@ public interface HorarioCursoRepository extends JpaRepository<HorarioCurso, Stri
      * @param pageable Configuración de paginación
      * @return Página de horarios activos
      */
-    @Query("SELECT h FROM HorarioCurso h WHERE h.deletedAt IS NULL")
+    @Query("SELECT h FROM HorarioCurso h WHERE h.deletedAt IS NULL ORDER BY h.dia ASC")
     Page<HorarioCurso> findAllActive(Pageable pageable);
 
     /**
@@ -34,7 +34,7 @@ public interface HorarioCursoRepository extends JpaRepository<HorarioCurso, Stri
      *
      * @return Lista de horarios activos
      */
-    @Query("SELECT h FROM HorarioCurso h WHERE h.deletedAt IS NULL")
+    @Query("SELECT h FROM HorarioCurso h WHERE h.deletedAt IS NULL ORDER BY h.dia ASC")
     List<HorarioCurso> findAllActive();
 
     /**
