@@ -33,7 +33,7 @@ public class Asistencia extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "estado", nullable = false, length = 12)
-    private EstadoAsistencia estado = EstadoAsistencia.AUSENTE;
+    private EstadoAsistencia estado = EstadoAsistencia.ausente;
 
     @Column(name = "observacion", length = 255)
     private String observacion;
@@ -49,9 +49,9 @@ public class Asistencia extends BaseEntity {
      * Enum para el estado de asistencia
      */
     public enum EstadoAsistencia {
-        PRESENTE,
-        AUSENTE,
-        TARDE,
-        JUSTIFICADO
+        presente,
+        ausente,
+        tarde,
+        justificado
     }
 }
