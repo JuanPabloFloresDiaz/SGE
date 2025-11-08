@@ -26,7 +26,7 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, String
      * @param pageable Configuración de paginación
      * @return Página de inscripciones activas
      */
-    @Query("SELECT i FROM Inscripcion i WHERE i.deletedAt IS NULL")
+    @Query("SELECT i FROM Inscripcion i WHERE i.deletedAt IS NULL ORDER BY i.fechaInscripcion DESC")
     Page<Inscripcion> findAllActive(Pageable pageable);
 
     /**
@@ -34,7 +34,7 @@ public interface InscripcionRepository extends JpaRepository<Inscripcion, String
      *
      * @return Lista de inscripciones activas
      */
-    @Query("SELECT i FROM Inscripcion i WHERE i.deletedAt IS NULL")
+    @Query("SELECT i FROM Inscripcion i WHERE i.deletedAt IS NULL ORDER BY i.fechaInscripcion DESC")
     List<Inscripcion> findAllActive();
 
     /**
