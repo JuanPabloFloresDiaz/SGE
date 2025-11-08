@@ -35,7 +35,7 @@ public class Profesor extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "contrato", length = 15)
-    private TipoContrato contrato = TipoContrato.EVENTUAL;
+    private TipoContrato contrato = TipoContrato.eventual;
 
     @Column(name = "activo")
     private Boolean activo = true;
@@ -44,9 +44,9 @@ public class Profesor extends BaseEntity {
      * Enum para el tipo de contrato
      */
     public enum TipoContrato {
-        TIEMPO_COMPLETO,
-        MEDIO_TIEMPO,
-        EVENTUAL
+        tiempo_completo,
+        medio_tiempo,
+        eventual
     }
 
     // Relaciones
