@@ -72,6 +72,7 @@ public class CalificacionService {
                 evaluacion.getCurso().getAsignatura().getCodigo(),
                 evaluacion.getCurso().getAsignatura().getNombre(),
                 evaluacion.getCurso().getAsignatura().getDescripcion(),
+                evaluacion.getCurso().getAsignatura().getImagenUrl(),
                 evaluacion.getCurso().getAsignatura().getCreatedAt(),
                 evaluacion.getCurso().getAsignatura().getUpdatedAt(),
                 evaluacion.getCurso().getAsignatura().getDeletedAt()
@@ -93,6 +94,7 @@ public class CalificacionService {
                 evaluacion.getCurso().getProfesor().getUsuario().getEmail(),
                 evaluacion.getCurso().getProfesor().getUsuario().getTelefono(),
                 evaluacion.getCurso().getProfesor().getUsuario().getActivo(),
+                evaluacion.getCurso().getProfesor().getUsuario().getFotoPerfilUrl(),
                 rolResponse,
                 evaluacion.getCurso().getProfesor().getUsuario().getCreatedAt(),
                 evaluacion.getCurso().getProfesor().getUsuario().getUpdatedAt(),
@@ -129,6 +131,7 @@ public class CalificacionService {
                 evaluacion.getCurso().getNombreGrupo(),
                 evaluacion.getCurso().getAulaDefault(),
                 evaluacion.getCurso().getCupo(),
+                evaluacion.getCurso().getImagenUrl(),
                 evaluacion.getCurso().getCreatedAt(),
                 evaluacion.getCurso().getUpdatedAt(),
                 evaluacion.getCurso().getDeletedAt()
@@ -152,6 +155,8 @@ public class CalificacionService {
                 evaluacion.getFecha(),
                 evaluacion.getPeso(),
                 evaluacion.getPublicado(),
+                evaluacion.getDocumentoUrl(),
+                evaluacion.getDocumentoNombre(),
                 evaluacion.getCreatedAt(),
                 evaluacion.getUpdatedAt(),
                 evaluacion.getDeletedAt()
@@ -176,6 +181,7 @@ public class CalificacionService {
                 estudiante.getUsuario().getEmail(),
                 estudiante.getUsuario().getTelefono(),
                 estudiante.getUsuario().getActivo(),
+                estudiante.getUsuario().getFotoPerfilUrl(),
                 estudianteRolResponse,
                 estudiante.getUsuario().getCreatedAt(),
                 estudiante.getUsuario().getUpdatedAt(),
@@ -191,6 +197,7 @@ public class CalificacionService {
                 estudiante.getGenero(),
                 estudiante.getIngreso(),
                 estudiante.getActivo(),
+                estudiante.getFotoUrl(),
                 estudiante.getCreatedAt(),
                 estudiante.getUpdatedAt(),
                 estudiante.getDeletedAt()

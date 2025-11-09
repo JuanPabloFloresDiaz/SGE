@@ -56,6 +56,7 @@ public class TemaService {
             unidad.getCurso().getAsignatura().getCodigo(),
             unidad.getCurso().getAsignatura().getNombre(),
             unidad.getCurso().getAsignatura().getDescripcion(),
+            unidad.getCurso().getAsignatura().getImagenUrl(),
             unidad.getCurso().getAsignatura().getCreatedAt(),
             unidad.getCurso().getAsignatura().getUpdatedAt(),
             unidad.getCurso().getAsignatura().getDeletedAt()
@@ -79,6 +80,7 @@ public class TemaService {
             unidad.getCurso().getProfesor().getUsuario().getEmail(),
             unidad.getCurso().getProfesor().getUsuario().getTelefono(),
             unidad.getCurso().getProfesor().getUsuario().getActivo(),
+            unidad.getCurso().getProfesor().getUsuario().getFotoPerfilUrl(),
             rolResponse,
             unidad.getCurso().getProfesor().getUsuario().getCreatedAt(),
             unidad.getCurso().getProfesor().getUsuario().getUpdatedAt(),
@@ -118,6 +120,7 @@ public class TemaService {
             unidad.getCurso().getNombreGrupo(),
             unidad.getCurso().getAulaDefault(),
             unidad.getCurso().getCupo(),
+            unidad.getCurso().getImagenUrl(),
             unidad.getCurso().getCreatedAt(),
             unidad.getCurso().getUpdatedAt(),
             unidad.getCurso().getDeletedAt()
@@ -130,6 +133,8 @@ public class TemaService {
             unidad.getTitulo(),
             unidad.getDescripcion(),
             unidad.getNumero(),
+            unidad.getDocumentoUrl(),
+            unidad.getDocumentoNombre(),
             unidad.getCreatedAt(),
             unidad.getUpdatedAt(),
             unidad.getDeletedAt()
@@ -142,6 +147,8 @@ public class TemaService {
             tema.getDescripcion(),
             tema.getNumero(),
             tema.getDuracionMinutos(),
+            tema.getDocumentoUrl(),
+            tema.getDocumentoNombre(),
             tema.getCreatedAt(),
             tema.getUpdatedAt(),
             tema.getDeletedAt()
@@ -211,6 +218,8 @@ public class TemaService {
         tema.setDescripcion(request.descripcion());
         tema.setNumero(request.numero());
         tema.setDuracionMinutos(request.duracionMinutos());
+        tema.setDocumentoUrl(request.documentoUrl());
+        tema.setDocumentoNombre(request.documentoNombre());
 
         Tema savedTema = temaRepository.save(tema);
         return toResponse(savedTema);
@@ -234,6 +243,12 @@ public class TemaService {
         }
         if (request.duracionMinutos() != null) {
             tema.setDuracionMinutos(request.duracionMinutos());
+        }
+        if (request.documentoUrl() != null) {
+            tema.setDocumentoUrl(request.documentoUrl());
+        }
+        if (request.documentoNombre() != null) {
+            tema.setDocumentoNombre(request.documentoNombre());
         }
 
         Tema updatedTema = temaRepository.save(tema);

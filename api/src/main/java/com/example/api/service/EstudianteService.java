@@ -76,6 +76,7 @@ public class EstudianteService {
                     usuario.getEmail(),
                     usuario.getTelefono(),
                     usuario.getActivo(),
+                    usuario.getFotoPerfilUrl(),
                     rolResponse,
                     usuario.getCreatedAt(),
                     usuario.getUpdatedAt(),
@@ -92,6 +93,7 @@ public class EstudianteService {
                 estudiante.getGenero(),
                 estudiante.getIngreso(),
                 estudiante.getActivo(),
+                estudiante.getFotoUrl(),
                 estudiante.getCreatedAt(),
                 estudiante.getUpdatedAt(),
                 estudiante.getDeletedAt()
@@ -192,6 +194,7 @@ public class EstudianteService {
         estudiante.setGenero(request.genero() != null ? request.genero() : Genero.O);
         estudiante.setIngreso(request.ingreso() != null ? request.ingreso() : LocalDate.now());
         estudiante.setActivo(request.activo() != null ? request.activo() : true);
+        estudiante.setFotoUrl(request.fotoUrl());
 
         Estudiante guardado = estudianteRepository.save(estudiante);
         return toResponse(guardado);
@@ -233,6 +236,9 @@ public class EstudianteService {
         }
         if (request.activo() != null) {
             estudiante.setActivo(request.activo());
+        }
+        if (request.fotoUrl() != null) {
+            estudiante.setFotoUrl(request.fotoUrl());
         }
 
         Estudiante actualizado = estudianteRepository.save(estudiante);

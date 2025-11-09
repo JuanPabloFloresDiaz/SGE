@@ -64,6 +64,7 @@ public class CursoService {
                     a.getCodigo(),
                     a.getNombre(),
                     a.getDescripcion(),
+                    a.getImagenUrl(),
                     a.getCreatedAt(),
                     a.getUpdatedAt(),
                     a.getDeletedAt()
@@ -108,6 +109,7 @@ public class CursoService {
                 curso.getNombreGrupo(),
                 curso.getAulaDefault(),
                 curso.getCupo(),
+                curso.getImagenUrl(),
                 curso.getCreatedAt(),
                 curso.getUpdatedAt(),
                 curso.getDeletedAt()
@@ -252,6 +254,7 @@ public class CursoService {
         curso.setNombreGrupo(request.nombreGrupo());
         curso.setAulaDefault(request.aulaDefault());
         curso.setCupo(request.cupo());
+        curso.setImagenUrl(request.imagenUrl());
 
         // Guardar
         Curso cursoGuardado = cursoRepository.save(curso);
@@ -299,6 +302,9 @@ public class CursoService {
         }
         if (request.cupo() != null) {
             curso.setCupo(request.cupo());
+        }
+        if (request.imagenUrl() != null) {
+            curso.setImagenUrl(request.imagenUrl());
         }
 
         Curso cursoActualizado = cursoRepository.save(curso);

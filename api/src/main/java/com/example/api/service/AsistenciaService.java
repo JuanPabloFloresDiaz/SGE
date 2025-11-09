@@ -72,6 +72,7 @@ public class AsistenciaService {
                 clase.getCurso().getAsignatura().getCodigo(),
                 clase.getCurso().getAsignatura().getNombre(),
                 clase.getCurso().getAsignatura().getDescripcion(),
+                clase.getCurso().getAsignatura().getImagenUrl(),
                 clase.getCurso().getAsignatura().getCreatedAt(),
                 clase.getCurso().getAsignatura().getUpdatedAt(),
                 clase.getCurso().getAsignatura().getDeletedAt()
@@ -93,6 +94,7 @@ public class AsistenciaService {
                 clase.getCurso().getProfesor().getUsuario().getEmail(),
                 clase.getCurso().getProfesor().getUsuario().getTelefono(),
                 clase.getCurso().getProfesor().getUsuario().getActivo(),
+                clase.getCurso().getProfesor().getUsuario().getFotoPerfilUrl(),
                 rolResponse,
                 clase.getCurso().getProfesor().getUsuario().getCreatedAt(),
                 clase.getCurso().getProfesor().getUsuario().getUpdatedAt(),
@@ -129,6 +131,7 @@ public class AsistenciaService {
                 clase.getCurso().getNombreGrupo(),
                 clase.getCurso().getAulaDefault(),
                 clase.getCurso().getCupo(),
+                clase.getCurso().getImagenUrl(),
                 clase.getCurso().getCreatedAt(),
                 clase.getCurso().getUpdatedAt(),
                 clase.getCurso().getDeletedAt()
@@ -142,6 +145,8 @@ public class AsistenciaService {
                     clase.getUnidad().getTitulo(),
                     clase.getUnidad().getDescripcion(),
                     clase.getUnidad().getNumero(),
+                    clase.getUnidad().getDocumentoUrl(),
+                    clase.getUnidad().getDocumentoNombre(),
                     clase.getUnidad().getCreatedAt(),
                     clase.getUnidad().getUpdatedAt(),
                     clase.getUnidad().getDeletedAt()
@@ -155,6 +160,7 @@ public class AsistenciaService {
                     clase.getTema().getUnidad().getCurso().getAsignatura().getCodigo(),
                     clase.getTema().getUnidad().getCurso().getAsignatura().getNombre(),
                     clase.getTema().getUnidad().getCurso().getAsignatura().getDescripcion(),
+                    clase.getTema().getUnidad().getCurso().getAsignatura().getImagenUrl(),
                     clase.getTema().getUnidad().getCurso().getAsignatura().getCreatedAt(),
                     clase.getTema().getUnidad().getCurso().getAsignatura().getUpdatedAt(),
                     clase.getTema().getUnidad().getCurso().getAsignatura().getDeletedAt()
@@ -176,6 +182,7 @@ public class AsistenciaService {
                     clase.getTema().getUnidad().getCurso().getProfesor().getUsuario().getEmail(),
                     clase.getTema().getUnidad().getCurso().getProfesor().getUsuario().getTelefono(),
                     clase.getTema().getUnidad().getCurso().getProfesor().getUsuario().getActivo(),
+                    clase.getTema().getUnidad().getCurso().getProfesor().getUsuario().getFotoPerfilUrl(),
                     rolDelTema,
                     clase.getTema().getUnidad().getCurso().getProfesor().getUsuario().getCreatedAt(),
                     clase.getTema().getUnidad().getCurso().getProfesor().getUsuario().getUpdatedAt(),
@@ -212,6 +219,7 @@ public class AsistenciaService {
                     clase.getTema().getUnidad().getCurso().getNombreGrupo(),
                     clase.getTema().getUnidad().getCurso().getAulaDefault(),
                     clase.getTema().getUnidad().getCurso().getCupo(),
+                    clase.getTema().getUnidad().getCurso().getImagenUrl(),
                     clase.getTema().getUnidad().getCurso().getCreatedAt(),
                     clase.getTema().getUnidad().getCurso().getUpdatedAt(),
                     clase.getTema().getUnidad().getCurso().getDeletedAt()
@@ -223,6 +231,8 @@ public class AsistenciaService {
                     clase.getTema().getUnidad().getTitulo(),
                     clase.getTema().getUnidad().getDescripcion(),
                     clase.getTema().getUnidad().getNumero(),
+                    clase.getTema().getUnidad().getDocumentoUrl(),
+                    clase.getTema().getUnidad().getDocumentoNombre(),
                     clase.getTema().getUnidad().getCreatedAt(),
                     clase.getTema().getUnidad().getUpdatedAt(),
                     clase.getTema().getUnidad().getDeletedAt()
@@ -235,6 +245,8 @@ public class AsistenciaService {
                     clase.getTema().getDescripcion(),
                     clase.getTema().getNumero(),
                     clase.getTema().getDuracionMinutos(),
+                    clase.getTema().getDocumentoUrl(),
+                    clase.getTema().getDocumentoNombre(),
                     clase.getTema().getCreatedAt(),
                     clase.getTema().getUpdatedAt(),
                     clase.getTema().getDeletedAt()
@@ -250,6 +262,8 @@ public class AsistenciaService {
                 unidadResponse,
                 temaResponse,
                 clase.getNotas(),
+                clase.getDocumentoUrl(),
+                clase.getDocumentoNombre(),
                 clase.getCreatedAt(),
                 clase.getUpdatedAt(),
                 clase.getDeletedAt()
@@ -274,6 +288,7 @@ public class AsistenciaService {
                 estudiante.getUsuario().getEmail(),
                 estudiante.getUsuario().getTelefono(),
                 estudiante.getUsuario().getActivo(),
+                estudiante.getUsuario().getFotoPerfilUrl(),
                 rolEstudiante,
                 estudiante.getUsuario().getCreatedAt(),
                 estudiante.getUsuario().getUpdatedAt(),
@@ -289,6 +304,7 @@ public class AsistenciaService {
                 estudiante.getGenero(),
                 estudiante.getIngreso(),
                 estudiante.getActivo(),
+                estudiante.getFotoUrl(),
                 estudiante.getCreatedAt(),
                 estudiante.getUpdatedAt(),
                 estudiante.getDeletedAt()
@@ -313,6 +329,7 @@ public class AsistenciaService {
                     asistencia.getRegistradoPor().getEmail(),
                     asistencia.getRegistradoPor().getTelefono(),
                     asistencia.getRegistradoPor().getActivo(),
+                    asistencia.getRegistradoPor().getFotoPerfilUrl(),
                     rolRegistradoPor,
                     asistencia.getRegistradoPor().getCreatedAt(),
                     asistencia.getRegistradoPor().getUpdatedAt(),

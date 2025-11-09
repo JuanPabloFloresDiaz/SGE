@@ -63,6 +63,7 @@ public class EvaluacionService {
                 curso.getAsignatura().getCodigo(),
                 curso.getAsignatura().getNombre(),
                 curso.getAsignatura().getDescripcion(),
+                curso.getAsignatura().getImagenUrl(),
                 curso.getAsignatura().getCreatedAt(),
                 curso.getAsignatura().getUpdatedAt(),
                 curso.getAsignatura().getDeletedAt()
@@ -84,6 +85,7 @@ public class EvaluacionService {
                 curso.getProfesor().getUsuario().getEmail(),
                 curso.getProfesor().getUsuario().getTelefono(),
                 curso.getProfesor().getUsuario().getActivo(),
+                curso.getProfesor().getUsuario().getFotoPerfilUrl(),
                 rolResponse,
                 curso.getProfesor().getUsuario().getCreatedAt(),
                 curso.getProfesor().getUsuario().getUpdatedAt(),
@@ -120,6 +122,7 @@ public class EvaluacionService {
                 curso.getNombreGrupo(),
                 curso.getAulaDefault(),
                 curso.getCupo(),
+                curso.getImagenUrl(),
                 curso.getCreatedAt(),
                 curso.getUpdatedAt(),
                 curso.getDeletedAt()
@@ -145,6 +148,8 @@ public class EvaluacionService {
                 evaluacion.getFecha(),
                 evaluacion.getPeso(),
                 evaluacion.getPublicado(),
+                evaluacion.getDocumentoUrl(),
+                evaluacion.getDocumentoNombre(),
                 evaluacion.getCreatedAt(),
                 evaluacion.getUpdatedAt(),
                 evaluacion.getDeletedAt()
@@ -286,6 +291,8 @@ public class EvaluacionService {
         evaluacion.setFecha(request.fecha());
         evaluacion.setPeso(request.peso() != null ? request.peso() : java.math.BigDecimal.ZERO);
         evaluacion.setPublicado(request.publicado() != null ? request.publicado() : false);
+        evaluacion.setDocumentoUrl(request.documentoUrl());
+        evaluacion.setDocumentoNombre(request.documentoNombre());
 
         Evaluacion saved = evaluacionRepository.save(evaluacion);
         return toResponse(saved);
@@ -319,6 +326,12 @@ public class EvaluacionService {
         }
         if (request.publicado() != null) {
             evaluacion.setPublicado(request.publicado());
+        }
+        if (request.documentoUrl() != null) {
+            evaluacion.setDocumentoUrl(request.documentoUrl());
+        }
+        if (request.documentoNombre() != null) {
+            evaluacion.setDocumentoNombre(request.documentoNombre());
         }
 
         Evaluacion updated = evaluacionRepository.save(evaluacion);

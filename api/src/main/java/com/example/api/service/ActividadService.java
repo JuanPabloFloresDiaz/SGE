@@ -57,6 +57,7 @@ public class ActividadService {
                 asignatura.getCodigo(),
                 asignatura.getNombre(),
                 asignatura.getDescripcion(),
+                asignatura.getImagenUrl(),
                 asignatura.getCreatedAt(),
                 asignatura.getUpdatedAt(),
                 asignatura.getDeletedAt()
@@ -80,6 +81,7 @@ public class ActividadService {
                 profesor.getUsuario().getEmail(),
                 profesor.getUsuario().getTelefono(),
                 profesor.getUsuario().getActivo(),
+                profesor.getUsuario().getFotoPerfilUrl(),
                 rolResponse,
                 profesor.getUsuario().getCreatedAt(),
                 profesor.getUsuario().getUpdatedAt(),

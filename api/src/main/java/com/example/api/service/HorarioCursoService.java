@@ -61,6 +61,7 @@ public class HorarioCursoService {
                 curso.getAsignatura().getCodigo(),
                 curso.getAsignatura().getNombre(),
                 curso.getAsignatura().getDescripcion(),
+                curso.getAsignatura().getImagenUrl(),
                 curso.getAsignatura().getCreatedAt(),
                 curso.getAsignatura().getUpdatedAt(),
                 curso.getAsignatura().getDeletedAt()
@@ -99,6 +100,7 @@ public class HorarioCursoService {
                 curso.getNombreGrupo(),
                 curso.getAulaDefault(),
                 curso.getCupo(),
+                curso.getImagenUrl(),
                 curso.getCreatedAt(),
                 curso.getUpdatedAt(),
                 curso.getDeletedAt()

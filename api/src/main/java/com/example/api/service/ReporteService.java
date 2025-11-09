@@ -86,6 +86,7 @@ public class ReporteService {
                 estudiante.getUsuario().getEmail(),
                 estudiante.getUsuario().getTelefono(),
                 estudiante.getUsuario().getActivo(),
+                estudiante.getUsuario().getFotoPerfilUrl(),
                 estudianteRolResponse,
                 estudiante.getUsuario().getCreatedAt(),
                 estudiante.getUsuario().getUpdatedAt(),
@@ -101,6 +102,7 @@ public class ReporteService {
                 estudiante.getGenero(),
                 estudiante.getIngreso(),
                 estudiante.getActivo(),
+                estudiante.getFotoUrl(),
                 estudiante.getCreatedAt(),
                 estudiante.getUpdatedAt(),
                 estudiante.getDeletedAt()
@@ -116,6 +118,7 @@ public class ReporteService {
                     curso.getAsignatura().getCodigo(),
                     curso.getAsignatura().getNombre(),
                     curso.getAsignatura().getDescripcion(),
+                    curso.getAsignatura().getImagenUrl(),
                     curso.getAsignatura().getCreatedAt(),
                     curso.getAsignatura().getUpdatedAt(),
                     curso.getAsignatura().getDeletedAt()
@@ -137,6 +140,7 @@ public class ReporteService {
                     curso.getProfesor().getUsuario().getEmail(),
                     curso.getProfesor().getUsuario().getTelefono(),
                     curso.getProfesor().getUsuario().getActivo(),
+                    curso.getProfesor().getUsuario().getFotoPerfilUrl(),
                     profesorRolResponse,
                     curso.getProfesor().getUsuario().getCreatedAt(),
                     curso.getProfesor().getUsuario().getUpdatedAt(),
@@ -173,6 +177,7 @@ public class ReporteService {
                     curso.getNombreGrupo(),
                     curso.getAulaDefault(),
                     curso.getCupo(),
+                    curso.getImagenUrl(),
                     curso.getCreatedAt(),
                     curso.getUpdatedAt(),
                     curso.getDeletedAt()
@@ -200,6 +205,7 @@ public class ReporteService {
                     creador.getEmail(),
                     creador.getTelefono(),
                     creador.getActivo(),
+                    creador.getFotoPerfilUrl(),
                     creadorRolResponse,
                     creador.getCreatedAt(),
                     creador.getUpdatedAt(),

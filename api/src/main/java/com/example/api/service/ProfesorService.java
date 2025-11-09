@@ -70,6 +70,7 @@ public class ProfesorService {
                     usuario.getEmail(),
                     usuario.getTelefono(),
                     usuario.getActivo(),
+                    usuario.getFotoPerfilUrl(),
                     rolResponse,
                     usuario.getCreatedAt(),
                     usuario.getUpdatedAt(),

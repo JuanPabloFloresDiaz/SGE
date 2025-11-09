@@ -67,6 +67,7 @@ public class UsuarioService {
                 usuario.getEmail(),
                 usuario.getTelefono(),
                 usuario.getActivo(),
+                usuario.getFotoPerfilUrl(),
                 rolResponse,
                 usuario.getCreatedAt(),
                 usuario.getUpdatedAt(),
@@ -254,6 +255,7 @@ public class UsuarioService {
         usuario.setTelefono(request.telefono());
         usuario.setRol(rol);
         usuario.setActivo(request.activo() != null ? request.activo() : true);
+        usuario.setFotoPerfilUrl(request.fotoPerfilUrl());
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
         return toResponse(savedUsuario);
@@ -322,6 +324,11 @@ public class UsuarioService {
         // Actualizar estado activo si se proporciona
         if (request.activo() != null) {
             usuario.setActivo(request.activo());
+        }
+
+        // Actualizar foto de perfil si se proporciona
+        if (request.fotoPerfilUrl() != null) {
+            usuario.setFotoPerfilUrl(request.fotoPerfilUrl());
         }
 
         Usuario updatedUsuario = usuarioRepository.save(usuario);

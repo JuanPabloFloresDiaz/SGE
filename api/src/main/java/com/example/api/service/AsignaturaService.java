@@ -46,6 +46,7 @@ public class AsignaturaService {
                 asignatura.getCodigo(),
                 asignatura.getNombre(),
                 asignatura.getDescripcion(),
+                asignatura.getImagenUrl(),
                 asignatura.getCreatedAt(),
                 asignatura.getUpdatedAt(),
                 asignatura.getDeletedAt()
@@ -137,6 +138,7 @@ public class AsignaturaService {
         asignatura.setCodigo(request.codigo());
         asignatura.setNombre(request.nombre());
         asignatura.setDescripcion(request.descripcion());
+        asignatura.setImagenUrl(request.imagenUrl());
 
         // Guardar
         Asignatura asignaturaGuardada = asignaturaRepository.save(asignatura);
@@ -169,6 +171,9 @@ public class AsignaturaService {
         }
         if (request.descripcion() != null) {
             asignatura.setDescripcion(request.descripcion());
+        }
+        if (request.imagenUrl() != null) {
+            asignatura.setImagenUrl(request.imagenUrl());
         }
 
         Asignatura asignaturaActualizada = asignaturaRepository.save(asignatura);

@@ -62,6 +62,7 @@ public class InscripcionService {
                 curso.getAsignatura().getCodigo(),
                 curso.getAsignatura().getNombre(),
                 curso.getAsignatura().getDescripcion(),
+                curso.getAsignatura().getImagenUrl(),
                 curso.getAsignatura().getCreatedAt(),
                 curso.getAsignatura().getUpdatedAt(),
                 curso.getAsignatura().getDeletedAt()
@@ -100,6 +101,7 @@ public class InscripcionService {
                 curso.getNombreGrupo(),
                 curso.getAulaDefault(),
                 curso.getCupo(),
+                curso.getImagenUrl(),
                 curso.getCreatedAt(),
                 curso.getUpdatedAt(),
                 curso.getDeletedAt()
@@ -115,6 +117,7 @@ public class InscripcionService {
                 estudiante.getUsuario().getEmail(),
                 estudiante.getUsuario().getTelefono(),
                 estudiante.getUsuario().getActivo(),
+                estudiante.getUsuario().getFotoPerfilUrl(),
                 null, // No incluimos RolResponse para simplificar
                 estudiante.getUsuario().getCreatedAt(),
                 estudiante.getUsuario().getUpdatedAt(),
@@ -130,6 +133,7 @@ public class InscripcionService {
                 estudiante.getGenero(),
                 estudiante.getIngreso(),
                 estudiante.getActivo(),
+                estudiante.getFotoUrl(),
                 estudiante.getCreatedAt(),
                 estudiante.getUpdatedAt(),
                 estudiante.getDeletedAt()

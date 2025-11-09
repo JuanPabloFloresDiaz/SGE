@@ -55,6 +55,7 @@ public class UnidadService {
             curso.getAsignatura().getCodigo(),
             curso.getAsignatura().getNombre(),
             curso.getAsignatura().getDescripcion(),
+            curso.getAsignatura().getImagenUrl(),
             curso.getAsignatura().getCreatedAt(),
             curso.getAsignatura().getUpdatedAt(),
             curso.getAsignatura().getDeletedAt()
@@ -78,6 +79,7 @@ public class UnidadService {
             curso.getProfesor().getUsuario().getEmail(),
             curso.getProfesor().getUsuario().getTelefono(),
             curso.getProfesor().getUsuario().getActivo(),
+            curso.getProfesor().getUsuario().getFotoPerfilUrl(),
             rolResponse,
             curso.getProfesor().getUsuario().getCreatedAt(),
             curso.getProfesor().getUsuario().getUpdatedAt(),
@@ -117,6 +119,7 @@ public class UnidadService {
             curso.getNombreGrupo(),
             curso.getAulaDefault(),
             curso.getCupo(),
+            curso.getImagenUrl(),
             curso.getCreatedAt(),
             curso.getUpdatedAt(),
             curso.getDeletedAt()
@@ -128,6 +131,8 @@ public class UnidadService {
             unidad.getTitulo(),
             unidad.getDescripcion(),
             unidad.getNumero(),
+            unidad.getDocumentoUrl(),
+            unidad.getDocumentoNombre(),
             unidad.getCreatedAt(),
             unidad.getUpdatedAt(),
             unidad.getDeletedAt()
@@ -186,6 +191,8 @@ public class UnidadService {
         unidad.setTitulo(request.titulo());
         unidad.setDescripcion(request.descripcion());
         unidad.setNumero(request.numero());
+        unidad.setDocumentoUrl(request.documentoUrl());
+        unidad.setDocumentoNombre(request.documentoNombre());
 
         Unidad savedUnidad = unidadRepository.save(unidad);
         return toResponse(savedUnidad);
@@ -206,6 +213,12 @@ public class UnidadService {
         }
         if (request.numero() != null) {
             unidad.setNumero(request.numero());
+        }
+        if (request.documentoUrl() != null) {
+            unidad.setDocumentoUrl(request.documentoUrl());
+        }
+        if (request.documentoNombre() != null) {
+            unidad.setDocumentoNombre(request.documentoNombre());
         }
 
         Unidad updatedUnidad = unidadRepository.save(unidad);

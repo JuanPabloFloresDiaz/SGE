@@ -66,6 +66,7 @@ public class ClaseService {
                 clase.getCurso().getAsignatura().getCodigo(),
                 clase.getCurso().getAsignatura().getNombre(),
                 clase.getCurso().getAsignatura().getDescripcion(),
+                clase.getCurso().getAsignatura().getImagenUrl(),
                 clase.getCurso().getAsignatura().getCreatedAt(),
                 clase.getCurso().getAsignatura().getUpdatedAt(),
                 clase.getCurso().getAsignatura().getDeletedAt()
@@ -89,6 +90,7 @@ public class ClaseService {
                 clase.getCurso().getProfesor().getUsuario().getEmail(),
                 clase.getCurso().getProfesor().getUsuario().getTelefono(),
                 clase.getCurso().getProfesor().getUsuario().getActivo(),
+                clase.getCurso().getProfesor().getUsuario().getFotoPerfilUrl(),
                 rolResponse,
                 clase.getCurso().getProfesor().getUsuario().getCreatedAt(),
                 clase.getCurso().getProfesor().getUsuario().getUpdatedAt(),
@@ -128,6 +130,7 @@ public class ClaseService {
                 clase.getCurso().getNombreGrupo(),
                 clase.getCurso().getAulaDefault(),
                 clase.getCurso().getCupo(),
+                clase.getCurso().getImagenUrl(),
                 clase.getCurso().getCreatedAt(),
                 clase.getCurso().getUpdatedAt(),
                 clase.getCurso().getDeletedAt()
@@ -142,6 +145,8 @@ public class ClaseService {
                     clase.getUnidad().getTitulo(),
                     clase.getUnidad().getDescripcion(),
                     clase.getUnidad().getNumero(),
+                    clase.getUnidad().getDocumentoUrl(),
+                    clase.getUnidad().getDocumentoNombre(),
                     clase.getUnidad().getCreatedAt(),
                     clase.getUnidad().getUpdatedAt(),
                     clase.getUnidad().getDeletedAt()
@@ -157,6 +162,7 @@ public class ClaseService {
                     clase.getTema().getUnidad().getCurso().getAsignatura().getCodigo(),
                     clase.getTema().getUnidad().getCurso().getAsignatura().getNombre(),
                     clase.getTema().getUnidad().getCurso().getAsignatura().getDescripcion(),
+                    clase.getTema().getUnidad().getCurso().getAsignatura().getImagenUrl(),
                     clase.getTema().getUnidad().getCurso().getAsignatura().getCreatedAt(),
                     clase.getTema().getUnidad().getCurso().getAsignatura().getUpdatedAt(),
                     clase.getTema().getUnidad().getCurso().getAsignatura().getDeletedAt()
@@ -178,6 +184,7 @@ public class ClaseService {
                     clase.getTema().getUnidad().getCurso().getProfesor().getUsuario().getEmail(),
                     clase.getTema().getUnidad().getCurso().getProfesor().getUsuario().getTelefono(),
                     clase.getTema().getUnidad().getCurso().getProfesor().getUsuario().getActivo(),
+                    clase.getTema().getUnidad().getCurso().getProfesor().getUsuario().getFotoPerfilUrl(),
                     rolDelTema,
                     clase.getTema().getUnidad().getCurso().getProfesor().getUsuario().getCreatedAt(),
                     clase.getTema().getUnidad().getCurso().getProfesor().getUsuario().getUpdatedAt(),
@@ -214,6 +221,7 @@ public class ClaseService {
                     clase.getTema().getUnidad().getCurso().getNombreGrupo(),
                     clase.getTema().getUnidad().getCurso().getAulaDefault(),
                     clase.getTema().getUnidad().getCurso().getCupo(),
+                    clase.getTema().getUnidad().getCurso().getImagenUrl(),
                     clase.getTema().getUnidad().getCurso().getCreatedAt(),
                     clase.getTema().getUnidad().getCurso().getUpdatedAt(),
                     clase.getTema().getUnidad().getCurso().getDeletedAt()
@@ -225,6 +233,8 @@ public class ClaseService {
                     clase.getTema().getUnidad().getTitulo(),
                     clase.getTema().getUnidad().getDescripcion(),
                     clase.getTema().getUnidad().getNumero(),
+                    clase.getTema().getUnidad().getDocumentoUrl(),
+                    clase.getTema().getUnidad().getDocumentoNombre(),
                     clase.getTema().getUnidad().getCreatedAt(),
                     clase.getTema().getUnidad().getUpdatedAt(),
                     clase.getTema().getUnidad().getDeletedAt()
@@ -237,6 +247,8 @@ public class ClaseService {
                     clase.getTema().getDescripcion(),
                     clase.getTema().getNumero(),
                     clase.getTema().getDuracionMinutos(),
+                    clase.getTema().getDocumentoUrl(),
+                    clase.getTema().getDocumentoNombre(),
                     clase.getTema().getCreatedAt(),
                     clase.getTema().getUpdatedAt(),
                     clase.getTema().getDeletedAt()
@@ -252,6 +264,8 @@ public class ClaseService {
                 unidadResponse,
                 temaResponse,
                 clase.getNotas(),
+                clase.getDocumentoUrl(),
+                clase.getDocumentoNombre(),
                 clase.getCreatedAt(),
                 clase.getUpdatedAt(),
                 clase.getDeletedAt()
@@ -347,6 +361,8 @@ public class ClaseService {
         clase.setUnidad(unidad);
         clase.setTema(tema);
         clase.setNotas(request.notas());
+        clase.setDocumentoUrl(request.documentoUrl());
+        clase.setDocumentoNombre(request.documentoNombre());
 
         Clase savedClase = claseRepository.save(clase);
         return toResponse(savedClase);
@@ -388,6 +404,12 @@ public class ClaseService {
         }
         if (request.notas() != null) {
             clase.setNotas(request.notas());
+        }
+        if (request.documentoUrl() != null) {
+            clase.setDocumentoUrl(request.documentoUrl());
+        }
+        if (request.documentoNombre() != null) {
+            clase.setDocumentoNombre(request.documentoNombre());
         }
 
         Clase updatedClase = claseRepository.save(clase);
