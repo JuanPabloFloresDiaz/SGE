@@ -37,6 +37,14 @@ public record CreateEvaluacionRequest(
         BigDecimal peso,
 
         @Schema(description = "Indica si la evaluación está publicada", example = "false")
-        Boolean publicado
+        Boolean publicado,
+
+        @Schema(description = "URL del documento de la evaluación", example = "uploads/evaluaciones/documento123.pdf")
+        @Size(max = 500, message = "La URL del documento no puede exceder 500 caracteres")
+        String documentoUrl,
+
+        @Schema(description = "Nombre del documento de la evaluación", example = "instrucciones-examen.pdf")
+        @Size(max = 255, message = "El nombre del documento no puede exceder 255 caracteres")
+        String documentoNombre
 ) {
 }

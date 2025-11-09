@@ -23,6 +23,14 @@ public record UpdateTemaRequest(
 
         @Schema(description = "Nueva duración estimada en minutos", example = "60")
         @Positive(message = "La duración debe ser un número positivo")
-        Integer duracionMinutos
+        Integer duracionMinutos,
+
+        @Schema(description = "Nueva URL del documento del tema", example = "uploads/temas/nuevo-documento.pdf")
+        @Size(max = 500, message = "La URL del documento no puede exceder 500 caracteres")
+        String documentoUrl,
+
+        @Schema(description = "Nuevo nombre del documento del tema", example = "nuevo-recurso.pdf")
+        @Size(max = 255, message = "El nombre del documento no puede exceder 255 caracteres")
+        String documentoNombre
 ) {
 }

@@ -28,6 +28,12 @@ public record TemaResponse(
         @Schema(description = "Duración estimada en minutos", example = "45")
         Integer duracionMinutos,
 
+        @Schema(description = "URL del documento del tema", example = "uploads/temas/documento123.pdf")
+        String documentoUrl,
+
+        @Schema(description = "Nombre del documento del tema", example = "recurso-tema1.pdf")
+        String documentoNombre,
+
         @Schema(description = "Fecha de creación", example = "2024-01-01T10:30:00")
         LocalDateTime createdAt,
 

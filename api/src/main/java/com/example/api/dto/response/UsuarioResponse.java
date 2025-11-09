@@ -29,6 +29,9 @@ public record UsuarioResponse(
         @Schema(description = "Estado activo del usuario", example = "true")
         Boolean activo,
 
+        @Schema(description = "URL de la foto de perfil del usuario", example = "uploads/usuarios/foto123.jpg")
+        String fotoPerfilUrl,
+
         @Schema(description = "Información del rol asignado")
         RolResponse rol,
 

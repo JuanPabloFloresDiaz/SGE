@@ -36,6 +36,10 @@ public record UpdateEstudianteRequest(
         LocalDate ingreso,
 
         @Schema(description = "Nuevo estado activo del estudiante", example = "false")
-        Boolean activo
+        Boolean activo,
+
+        @Schema(description = "Nueva URL de la foto del estudiante", example = "uploads/estudiantes/nueva-foto.jpg")
+        @Size(max = 500, message = "La URL de la foto no puede exceder 500 caracteres")
+        String fotoUrl
 ) {
 }

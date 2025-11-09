@@ -21,6 +21,10 @@ public record CreateAsignaturaRequest(
         String nombre,
 
         @Schema(description = "Descripción detallada de la asignatura", example = "Introducción al cálculo diferencial e integral")
-        String descripcion
+        String descripcion,
+
+        @Schema(description = "URL de la imagen de la asignatura", example = "uploads/asignaturas/imagen123.jpg")
+        @Size(max = 500, message = "La URL de la imagen no puede exceder 500 caracteres")
+        String imagenUrl
 ) {
 }

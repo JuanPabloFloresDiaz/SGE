@@ -30,6 +30,10 @@ public record UpdateCursoRequest(
 
         @Schema(description = "Nuevo cupo máximo", example = "35")
         @Min(value = 0, message = "El cupo debe ser mayor o igual a 0")
-        Integer cupo
+        Integer cupo,
+
+        @Schema(description = "Nueva URL de la imagen del curso", example = "uploads/cursos/nueva-imagen.jpg")
+        @Size(max = 500, message = "La URL de la imagen no puede exceder 500 caracteres")
+        String imagenUrl
 ) {
 }

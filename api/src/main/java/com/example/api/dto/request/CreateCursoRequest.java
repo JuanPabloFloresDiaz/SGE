@@ -35,6 +35,10 @@ public record CreateCursoRequest(
         @Schema(description = "Cupo máximo de estudiantes", example = "30", required = true)
         @NotNull(message = "El cupo es obligatorio")
         @Min(value = 0, message = "El cupo debe ser mayor o igual a 0")
-        Integer cupo
+        Integer cupo,
+
+        @Schema(description = "URL de la imagen del curso", example = "uploads/cursos/imagen123.jpg")
+        @Size(max = 500, message = "La URL de la imagen no puede exceder 500 caracteres")
+        String imagenUrl
 ) {
 }

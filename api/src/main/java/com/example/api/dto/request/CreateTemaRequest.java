@@ -28,6 +28,14 @@ public record CreateTemaRequest(
 
         @Schema(description = "Duración estimada en minutos", example = "45")
         @Positive(message = "La duración debe ser un número positivo")
-        Integer duracionMinutos
+        Integer duracionMinutos,
+
+        @Schema(description = "URL del documento del tema", example = "uploads/temas/documento123.pdf")
+        @Size(max = 500, message = "La URL del documento no puede exceder 500 caracteres")
+        String documentoUrl,
+
+        @Schema(description = "Nombre del documento del tema", example = "recurso-tema1.pdf")
+        @Size(max = 255, message = "El nombre del documento no puede exceder 255 caracteres")
+        String documentoNombre
 ) {
 }

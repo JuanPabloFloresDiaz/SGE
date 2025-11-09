@@ -36,6 +36,12 @@ public record ClaseResponse(
         @Schema(description = "Notas sobre la clase", example = "Se revisó el tema de variables")
         String notas,
 
+        @Schema(description = "URL del documento de la clase", example = "uploads/clases/documento123.pdf")
+        String documentoUrl,
+
+        @Schema(description = "Nombre del documento de la clase", example = "presentacion-clase1.pdf")
+        String documentoNombre,
+
         @Schema(description = "Fecha de creación", example = "2024-01-01T10:30:00")
         LocalDateTime createdAt,
 

@@ -31,6 +31,9 @@ public record CursoResponse(
         @Schema(description = "Cupo máximo de estudiantes", example = "30")
         Integer cupo,
 
+        @Schema(description = "URL de la imagen del curso", example = "uploads/cursos/imagen123.jpg")
+        String imagenUrl,
+
         @Schema(description = "Fecha de creación", example = "2024-01-01T10:30:00")
         LocalDateTime createdAt,
 

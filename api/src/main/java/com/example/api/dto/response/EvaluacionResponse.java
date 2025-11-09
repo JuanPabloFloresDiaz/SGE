@@ -33,6 +33,12 @@ public record EvaluacionResponse(
         @Schema(description = "Indica si la evaluación está publicada", example = "false")
         Boolean publicado,
 
+        @Schema(description = "URL del documento de la evaluación", example = "uploads/evaluaciones/documento123.pdf")
+        String documentoUrl,
+
+        @Schema(description = "Nombre del documento de la evaluación", example = "instrucciones-examen.pdf")
+        String documentoNombre,
+
         @Schema(description = "Fecha de creación", example = "2024-01-01T10:30:00")
         LocalDateTime createdAt,
 

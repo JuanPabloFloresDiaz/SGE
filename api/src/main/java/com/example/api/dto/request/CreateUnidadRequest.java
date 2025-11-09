@@ -23,6 +23,14 @@ public record CreateUnidadRequest(
         String descripcion,
 
         @Schema(description = "Número de la unidad", example = "1")
-        Integer numero
+        Integer numero,
+
+        @Schema(description = "URL del documento de la unidad", example = "uploads/unidades/documento123.pdf")
+        @Size(max = 500, message = "La URL del documento no puede exceder 500 caracteres")
+        String documentoUrl,
+
+        @Schema(description = "Nombre del documento de la unidad", example = "material-unidad1.pdf")
+        @Size(max = 255, message = "El nombre del documento no puede exceder 255 caracteres")
+        String documentoNombre
 ) {
 }

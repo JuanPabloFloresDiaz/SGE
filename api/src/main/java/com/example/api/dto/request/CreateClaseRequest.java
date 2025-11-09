@@ -34,6 +34,14 @@ public record CreateClaseRequest(
         String temaId,
 
         @Schema(description = "Notas sobre la clase", example = "Se revisó el tema de variables")
-        String notas
+        String notas,
+
+        @Schema(description = "URL del documento de la clase", example = "uploads/clases/documento123.pdf")
+        @jakarta.validation.constraints.Size(max = 500, message = "La URL del documento no puede exceder 500 caracteres")
+        String documentoUrl,
+
+        @Schema(description = "Nombre del documento de la clase", example = "presentacion-clase1.pdf")
+        @jakarta.validation.constraints.Size(max = 255, message = "El nombre del documento no puede exceder 255 caracteres")
+        String documentoNombre
 ) {
 }

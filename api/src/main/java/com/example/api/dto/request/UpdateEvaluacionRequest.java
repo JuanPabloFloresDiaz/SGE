@@ -34,6 +34,14 @@ public record UpdateEvaluacionRequest(
         BigDecimal peso,
 
         @Schema(description = "Nuevo estado de publicación", example = "true")
-        Boolean publicado
+        Boolean publicado,
+
+        @Schema(description = "Nueva URL del documento de la evaluación", example = "uploads/evaluaciones/nuevo-documento.pdf")
+        @Size(max = 500, message = "La URL del documento no puede exceder 500 caracteres")
+        String documentoUrl,
+
+        @Schema(description = "Nuevo nombre del documento de la evaluación", example = "nueva-rubrica.pdf")
+        @Size(max = 255, message = "El nombre del documento no puede exceder 255 caracteres")
+        String documentoNombre
 ) {
 }

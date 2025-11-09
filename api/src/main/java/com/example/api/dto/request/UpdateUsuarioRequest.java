@@ -41,6 +41,10 @@ public record UpdateUsuarioRequest(
         String rolId,
 
         @Schema(description = "Nuevo estado activo del usuario", example = "false")
-        Boolean activo
+        Boolean activo,
+
+        @Schema(description = "Nueva URL de la foto de perfil", example = "uploads/usuarios/nueva-foto.jpg")
+        @Size(max = 500, message = "La URL de la foto de perfil no puede exceder 500 caracteres")
+        String fotoPerfilUrl
 ) {
 }

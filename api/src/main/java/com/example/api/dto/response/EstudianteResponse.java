@@ -38,6 +38,9 @@ public record EstudianteResponse(
         @Schema(description = "Estado activo del estudiante", example = "true")
         Boolean activo,
 
+        @Schema(description = "URL de la foto del estudiante", example = "uploads/estudiantes/foto123.jpg")
+        String fotoUrl,
+
         @Schema(description = "Fecha de creación", example = "2024-01-15T10:30:00")
         LocalDateTime createdAt,
 

@@ -44,6 +44,10 @@ public record CreateEstudianteRequest(
         LocalDate ingreso,
 
         @Schema(description = "Indica si el estudiante está activo", example = "true", defaultValue = "true")
-        Boolean activo
+        Boolean activo,
+
+        @Schema(description = "URL de la foto del estudiante", example = "uploads/estudiantes/foto123.jpg")
+        @Size(max = 500, message = "La URL de la foto no puede exceder 500 caracteres")
+        String fotoUrl
 ) {
 }

@@ -18,6 +18,14 @@ public record UpdateUnidadRequest(
         String descripcion,
 
         @Schema(description = "Nuevo número de la unidad", example = "2")
-        Integer numero
+        Integer numero,
+
+        @Schema(description = "Nueva URL del documento de la unidad", example = "uploads/unidades/nuevo-documento.pdf")
+        @Size(max = 500, message = "La URL del documento no puede exceder 500 caracteres")
+        String documentoUrl,
+
+        @Schema(description = "Nuevo nombre del documento de la unidad", example = "nuevo-material.pdf")
+        @Size(max = 255, message = "El nombre del documento no puede exceder 255 caracteres")
+        String documentoNombre
 ) {
 }

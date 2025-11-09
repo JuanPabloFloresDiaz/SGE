@@ -47,6 +47,10 @@ public record CreateUsuarioRequest(
 
         @Schema(description = "Indica si el usuario está activo", example = "true", defaultValue = "true")
         @NotNull(message = "El estado activo es obligatorio")
-        Boolean activo
+        Boolean activo,
+
+        @Schema(description = "URL de la foto de perfil del usuario", example = "uploads/usuarios/foto123.jpg")
+        @Size(max = 500, message = "La URL de la foto de perfil no puede exceder 500 caracteres")
+        String fotoPerfilUrl
 ) {
 }

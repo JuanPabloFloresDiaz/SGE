@@ -22,6 +22,9 @@ public record AsignaturaResponse(
         @Schema(description = "Descripción de la asignatura", example = "Introducción al cálculo diferencial e integral")
         String descripcion,
 
+        @Schema(description = "URL de la imagen de la asignatura", example = "uploads/asignaturas/imagen123.jpg")
+        String imagenUrl,
+
         @Schema(description = "Fecha de creación", example = "2024-01-01T10:30:00")
         LocalDateTime createdAt,
 
