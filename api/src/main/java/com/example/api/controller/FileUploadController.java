@@ -60,7 +60,7 @@ public class FileUploadController {
                 required = true,
                 schema = @Schema(
                     type = "string",
-                    allowableValues = {"ACTIVIDADES", "ESTUDIANTES", "PROFESORES", "ASIGNATURAS", "CURSOS", "MATERIALES", "OTROS"},
+                    allowableValues = {"ACTIVIDADES", "ESTUDIANTES", "CURSOS", "ASIGNATURAS", "CLASES", "UNIDADES", "TEMAS", "EVALUACIONES", "PROFESORES", "MATERIALES", "OTROS"},
                     example = "ACTIVIDADES"
                 )
             )
@@ -74,7 +74,7 @@ public class FileUploadController {
             } catch (IllegalArgumentException e) {
                 Map<String, String> errorResponse = new HashMap<>();
                 errorResponse.put("error", "Categoría inválida. Valores permitidos: " + 
-                                          "ACTIVIDADES, ESTUDIANTES, PROFESORES, ASIGNATURAS, CURSOS, MATERIALES, OTROS");
+                                          "ACTIVIDADES, ESTUDIANTES, CURSOS, ASIGNATURAS, CLASES, UNIDADES, TEMAS, EVALUACIONES, PROFESORES, MATERIALES, OTROS");
                 return ResponseEntity.badRequest().body(errorResponse);
             }
 
