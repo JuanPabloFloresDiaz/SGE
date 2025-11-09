@@ -39,4 +39,10 @@ public class Tema extends BaseEntity {
 
     @Column(name = "duracion_minutos")
     private Integer duracionMinutos;
+
+    @Column(name = "documento_url", length = 500)
+    private String documentoUrl;
+
+    @Column(name = "documento_nombre", length = 255)
+    private String documentoNombre;
 }

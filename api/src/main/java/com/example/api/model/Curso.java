@@ -46,6 +46,9 @@ public class Curso extends BaseEntity {
     @Column(name = "cupo")
     private Integer cupo = 0;
 
+    @Column(name = "imagen_url", length = 500)
+    private String imagenUrl;
+
     // Relaciones
     @OneToMany(mappedBy = "curso")
     private List<HorarioCurso> horarios;

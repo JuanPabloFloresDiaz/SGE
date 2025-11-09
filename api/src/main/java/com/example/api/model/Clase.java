@@ -53,6 +53,12 @@ public class Clase extends BaseEntity {
     @Column(name = "notas", columnDefinition = "TEXT")
     private String notas;
 
+    @Column(name = "documento_url", length = 500)
+    private String documentoUrl;
+
+    @Column(name = "documento_nombre", length = 255)
+    private String documentoNombre;
+
     // Relaciones
     @OneToMany(mappedBy = "clase")
     private List<Asistencia> asistencias;

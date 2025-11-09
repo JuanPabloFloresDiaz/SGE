@@ -50,6 +50,9 @@ public class Estudiante extends BaseEntity {
     @Column(name = "activo")
     private Boolean activo = true;
 
+    @Column(name = "foto_url", length = 500)
+    private String fotoUrl;
+
     // Relaciones
     @OneToMany(mappedBy = "estudiante")
     private List<Inscripcion> inscripciones;

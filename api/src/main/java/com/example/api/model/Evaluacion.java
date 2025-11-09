@@ -47,6 +47,12 @@ public class Evaluacion extends BaseEntity {
     @Column(name = "publicado")
     private Boolean publicado = false;
 
+    @Column(name = "documento_url", length = 500)
+    private String documentoUrl;
+
+    @Column(name = "documento_nombre", length = 255)
+    private String documentoNombre;
+
     // Relaciones
     @OneToMany(mappedBy = "evaluacion")
     private List<Calificacion> calificaciones;

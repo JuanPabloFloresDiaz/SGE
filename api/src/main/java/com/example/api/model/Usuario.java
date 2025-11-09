@@ -41,6 +41,9 @@ public class Usuario extends BaseEntity {
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
 
+    @Column(name = "foto_perfil_url", length = 500)
+    private String fotoPerfilUrl;
+
     // Relaciones
     @ManyToOne
     @JoinColumn(name = "rol_id", nullable = false)

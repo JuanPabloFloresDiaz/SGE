@@ -40,6 +40,12 @@ public class Unidad extends BaseEntity {
     @Column(name = "numero")
     private Integer numero;
 
+    @Column(name = "documento_url", length = 500)
+    private String documentoUrl;
+
+    @Column(name = "documento_nombre", length = 255)
+    private String documentoNombre;
+
     // Relaciones
     @OneToMany(mappedBy = "unidad")
     private List<Tema> temas;
