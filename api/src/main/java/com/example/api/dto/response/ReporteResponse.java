@@ -3,6 +3,7 @@ package com.example.api.dto.response;
 import java.time.LocalDateTime;
 
 import com.example.api.model.Reporte.TipoReporte;
+import com.example.api.model.Reporte.PesoReporte;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
@@ -23,6 +24,9 @@ public record ReporteResponse(
 
         @Schema(description = "Tipo de reporte", example = "ACADEMICO")
         TipoReporte tipo,
+
+        @Schema(description = "Peso/severidad del reporte", example = "MODERADO")
+        PesoReporte peso,
 
         @Schema(description = "Título del reporte", example = "Bajo rendimiento en matemáticas")
         String titulo,
