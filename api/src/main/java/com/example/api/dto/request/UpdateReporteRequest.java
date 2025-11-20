@@ -1,6 +1,7 @@
 package com.example.api.dto.request;
 
 import com.example.api.model.Reporte.TipoReporte;
+import com.example.api.model.Reporte.PesoReporte;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Size;
@@ -17,6 +18,9 @@ public record UpdateReporteRequest(
 
         @Schema(description = "Nuevo tipo de reporte", example = "CONDUCTA", allowableValues = {"CONDUCTA", "ACADEMICO", "OTRO"})
         TipoReporte tipo,
+
+        @Schema(description = "Nuevo peso/severidad del reporte", example = "GRAVE", allowableValues = {"LEVE", "MODERADO", "GRAVE"})
+        PesoReporte peso,
 
         @Schema(description = "Nuevo título del reporte", example = "Mejora en comportamiento")
         @Size(max = 200, message = "El título no puede exceder 200 caracteres")
