@@ -1,6 +1,7 @@
 package com.example.api.dto.request;
 
 import com.example.api.model.Reporte.TipoReporte;
+import com.example.api.model.Reporte.PesoReporte;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -23,6 +24,10 @@ public record CreateReporteRequest(
         @Schema(description = "Tipo de reporte", example = "ACADEMICO", required = true, allowableValues = {"CONDUCTA", "ACADEMICO", "OTRO"})
         @NotNull(message = "El tipo de reporte es obligatorio")
         TipoReporte tipo,
+
+        @Schema(description = "Peso/severidad del reporte", example = "MODERADO", required = true, allowableValues = {"LEVE", "MODERADO", "GRAVE"})
+        @NotNull(message = "El peso del reporte es obligatorio")
+        PesoReporte peso,
 
         @Schema(description = "Título del reporte", example = "Bajo rendimiento en matemáticas", required = true)
         @NotBlank(message = "El título es obligatorio")
