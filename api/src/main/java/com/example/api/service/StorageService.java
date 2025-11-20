@@ -33,6 +33,7 @@ public class StorageService {
         TEMAS("temas"),
         EVALUACIONES("evaluaciones"),
         PROFESORES("profesores"),
+        USUARIOS("usuarios"),
         MATERIALES("materiales"),
         OTROS("otros");
 
