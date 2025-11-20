@@ -218,6 +218,7 @@ public class ReporteService {
                 estudianteResponse,
                 cursoResponse,
                 reporte.getTipo(),
+                reporte.getPeso(),
                 reporte.getTitulo(),
                 reporte.getDescripcion(),
                 creadoPorResponse,
@@ -384,6 +385,7 @@ public class ReporteService {
         Reporte reporte = new Reporte();
         reporte.setEstudiante(estudiante);
         reporte.setTipo(request.tipo());
+        reporte.setPeso(request.peso());
         reporte.setTitulo(request.titulo());
         reporte.setDescripcion(request.descripcion());
 
@@ -424,6 +426,9 @@ public class ReporteService {
 
         if (request.tipo() != null) {
             reporte.setTipo(request.tipo());
+        }
+        if (request.peso() != null) {
+            reporte.setPeso(request.peso());
         }
         if (request.titulo() != null) {
             reporte.setTitulo(request.titulo());
