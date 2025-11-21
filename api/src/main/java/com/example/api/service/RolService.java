@@ -11,6 +11,7 @@ import com.example.api.dto.request.UpdateRolRequest;
 import com.example.api.dto.response.RolResponse;
 import com.example.api.exception.DuplicateResourceException;
 import com.example.api.exception.ResourceNotFoundException;
+import com.example.api.mapper.RolMapper;
 import com.example.api.model.Rol;
 import com.example.api.repository.RolRepository;
 
@@ -22,32 +23,17 @@ import com.example.api.repository.RolRepository;
 public class RolService {
 
     private final RolRepository rolRepository;
+    private final RolMapper rolMapper;
 
     /**
      * Constructor con inyección de dependencias.
      *
      * @param rolRepository Repositorio de roles
+     * @param rolMapper     Mapper de roles
      */
-    public RolService(RolRepository rolRepository) {
+    public RolService(RolRepository rolRepository, RolMapper rolMapper) {
         this.rolRepository = rolRepository;
-    }
-
-    /**
-     * Convierte una entidad Rol a RolResponse.
-     * Método auxiliar para evitar problemas de Lombok en el IDE.
-     *
-     * @param rol La entidad Rol
-     * @return El DTO RolResponse
-     */
-    private RolResponse toResponse(Rol rol) {
-        return new RolResponse(
-                rol.getId(),
-                rol.getNombre(),
-                rol.getDescripcion(),
-                rol.getCreatedAt(),
-                rol.getUpdatedAt(),
-                rol.getDeletedAt()
-        );
+        this.rolMapper = rolMapper;
     }
 
     /**
@@ -59,7 +45,7 @@ public class RolService {
     public List<RolResponse> getAllRoles() {
         return rolRepository.findAllActive()
                 .stream()
-                .map(this::toResponse)
+                .map(rolMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -72,7 +58,7 @@ public class RolService {
     public List<RolResponse> getAllDeletedRoles() {
         return rolRepository.findAllDeleted()
                 .stream()
-                .map(this::toResponse)
+                .map(rolMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -92,7 +78,7 @@ public class RolService {
             throw new ResourceNotFoundException("Rol", "id", id);
         }
 
-        return toResponse(rol);
+        return rolMapper.toResponse(rol);
     }
 
     /**
@@ -105,7 +91,7 @@ public class RolService {
     public List<RolResponse> searchRolesByNombre(String nombre) {
         return rolRepository.searchByNombre(nombre)
                 .stream()
-                .map(this::toResponse)
+                .map(rolMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -127,16 +113,16 @@ public class RolService {
         rol.setDescripcion(request.descripcion());
 
         Rol savedRol = rolRepository.save(rol);
-        return toResponse(savedRol);
+        return rolMapper.toResponse(savedRol);
     }
 
     /**
      * Actualiza un rol existente.
      *
-     * @param id El ID del rol a actualizar
+     * @param id      El ID del rol a actualizar
      * @param request Datos actualizados del rol
      * @return El rol actualizado
-     * @throws ResourceNotFoundException si el rol no existe
+     * @throws ResourceNotFoundException  si el rol no existe
      * @throws DuplicateResourceException si el nuevo nombre ya existe
      */
     public RolResponse updateRol(String id, UpdateRolRequest request) {
@@ -147,7 +133,8 @@ public class RolService {
             throw new ResourceNotFoundException("Rol", "id", id);
         }
 
-        // Si se va a actualizar el nombre, validar que no exista otro rol con ese nombre
+        // Si se va a actualizar el nombre, validar que no exista otro rol con ese
+        // nombre
         if (request.nombre() != null && !request.nombre().equals(rol.getNombre())) {
             if (rolRepository.existsByNombreAndIdNot(request.nombre(), id)) {
                 throw new DuplicateResourceException("Rol", "nombre", request.nombre());
@@ -161,7 +148,7 @@ public class RolService {
         }
 
         Rol updatedRol = rolRepository.save(rol);
-        return toResponse(updatedRol);
+        return rolMapper.toResponse(updatedRol);
     }
 
     /**
@@ -198,7 +185,7 @@ public class RolService {
 
         rol.restore();
         Rol restoredRol = rolRepository.save(rol);
-        return toResponse(restoredRol);
+        return rolMapper.toResponse(restoredRol);
     }
 
     /**
