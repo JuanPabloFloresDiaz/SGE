@@ -15,41 +15,29 @@ import com.example.api.dto.response.BloqueHorarioResponse;
 import com.example.api.exception.ResourceNotFoundException;
 import com.example.api.model.BloqueHorario;
 import com.example.api.repository.BloqueHorarioRepository;
+import com.example.api.mapper.BloqueHorarioMapper;
 
 /**
- * Servicio que contiene la lógica de negocio para la gestión de bloques de horario.
+ * Servicio que contiene la lógica de negocio para la gestión de bloques de
+ * horario.
  */
 @Service
 @Transactional
 public class BloqueHorarioService {
 
     private final BloqueHorarioRepository bloqueHorarioRepository;
+    private final BloqueHorarioMapper bloqueHorarioMapper;
 
     /**
      * Constructor con inyección de dependencias.
      *
      * @param bloqueHorarioRepository Repositorio de bloques de horario
+     * @param bloqueHorarioMapper     Mapper de bloques de horario
      */
-    public BloqueHorarioService(BloqueHorarioRepository bloqueHorarioRepository) {
+    public BloqueHorarioService(BloqueHorarioRepository bloqueHorarioRepository,
+            BloqueHorarioMapper bloqueHorarioMapper) {
         this.bloqueHorarioRepository = bloqueHorarioRepository;
-    }
-
-    /**
-     * Convierte una entidad BloqueHorario a BloqueHorarioResponse.
-     *
-     * @param bloque La entidad BloqueHorario
-     * @return El DTO BloqueHorarioResponse
-     */
-    private BloqueHorarioResponse toResponse(BloqueHorario bloque) {
-        return new BloqueHorarioResponse(
-                bloque.getId(),
-                bloque.getNombre(),
-                bloque.getInicio(),
-                bloque.getFin(),
-                bloque.getCreatedAt(),
-                bloque.getUpdatedAt(),
-                bloque.getDeletedAt()
-        );
+        this.bloqueHorarioMapper = bloqueHorarioMapper;
     }
 
     /**
@@ -61,7 +49,7 @@ public class BloqueHorarioService {
     @Transactional(readOnly = true)
     public Page<BloqueHorarioResponse> getAllBloques(Pageable pageable) {
         return bloqueHorarioRepository.findAllActive(pageable)
-                .map(this::toResponse);
+                .map(bloqueHorarioMapper::toResponse);
     }
 
     /**
@@ -75,7 +63,7 @@ public class BloqueHorarioService {
     public BloqueHorarioResponse getBloqueById(String id) {
         BloqueHorario bloque = bloqueHorarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bloque de horario no encontrado con ID: " + id));
-        return toResponse(bloque);
+        return bloqueHorarioMapper.toResponse(bloque);
     }
 
     /**
@@ -88,7 +76,7 @@ public class BloqueHorarioService {
     public List<BloqueHorarioResponse> getBloquesOrdenados() {
         return bloqueHorarioRepository.findAllActiveOrderedByInicio()
                 .stream()
-                .map(this::toResponse)
+                .map(bloqueHorarioMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -101,7 +89,7 @@ public class BloqueHorarioService {
     public List<BloqueHorarioResponse> getBloquesDeleted() {
         return bloqueHorarioRepository.findAllDeleted()
                 .stream()
-                .map(this::toResponse)
+                .map(bloqueHorarioMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -110,7 +98,8 @@ public class BloqueHorarioService {
      *
      * @param request Datos del bloque a crear
      * @return El bloque creado
-     * @throws IllegalArgumentException si la hora de fin es anterior o igual a la hora de inicio
+     * @throws IllegalArgumentException si la hora de fin es anterior o igual a la
+     *                                  hora de inicio
      */
     public BloqueHorarioResponse createBloque(CreateBloqueHorarioRequest request) {
         // Validar que la hora de fin sea posterior a la hora de inicio
@@ -124,17 +113,18 @@ public class BloqueHorarioService {
         bloque.setFin(request.fin());
 
         BloqueHorario savedBloque = bloqueHorarioRepository.save(bloque);
-        return toResponse(savedBloque);
+        return bloqueHorarioMapper.toResponse(savedBloque);
     }
 
     /**
      * Actualiza un bloque de horario existente.
      *
-     * @param id El ID del bloque a actualizar
+     * @param id      El ID del bloque a actualizar
      * @param request Datos de actualización
      * @return El bloque actualizado
      * @throws ResourceNotFoundException si el bloque no existe
-     * @throws IllegalArgumentException si la hora de fin es anterior o igual a la hora de inicio
+     * @throws IllegalArgumentException  si la hora de fin es anterior o igual a la
+     *                                   hora de inicio
      */
     public BloqueHorarioResponse updateBloque(String id, UpdateBloqueHorarioRequest request) {
         BloqueHorario bloque = bloqueHorarioRepository.findById(id)
@@ -156,7 +146,7 @@ public class BloqueHorarioService {
         }
 
         BloqueHorario updatedBloque = bloqueHorarioRepository.save(bloque);
-        return toResponse(updatedBloque);
+        return bloqueHorarioMapper.toResponse(updatedBloque);
     }
 
     /**
@@ -197,6 +187,6 @@ public class BloqueHorarioService {
                 .orElseThrow(() -> new ResourceNotFoundException("Bloque de horario no encontrado con ID: " + id));
         bloque.setDeletedAt(null);
         BloqueHorario restoredBloque = bloqueHorarioRepository.save(bloque);
-        return toResponse(restoredBloque);
+        return bloqueHorarioMapper.toResponse(restoredBloque);
     }
 }
