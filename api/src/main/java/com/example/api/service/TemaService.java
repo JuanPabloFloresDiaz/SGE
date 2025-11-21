@@ -11,19 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.api.dto.request.CreateTemaRequest;
 import com.example.api.dto.request.UpdateTemaRequest;
-import com.example.api.dto.response.AsignaturaResponse;
-import com.example.api.dto.response.CursoResponse;
-import com.example.api.dto.response.PeriodoResponse;
-import com.example.api.dto.response.ProfesorResponse;
-import com.example.api.dto.response.RolResponse;
 import com.example.api.dto.response.TemaResponse;
-import com.example.api.dto.response.UnidadResponse;
-import com.example.api.dto.response.UsuarioResponse;
 import com.example.api.exception.ResourceNotFoundException;
 import com.example.api.model.Tema;
 import com.example.api.model.Unidad;
 import com.example.api.repository.TemaRepository;
 import com.example.api.repository.UnidadRepository;
+import com.example.api.mapper.TemaMapper;
 
 /**
  * Servicio que contiene la lógica de negocio para la gestión de temas.
@@ -34,125 +28,17 @@ public class TemaService {
 
     private final TemaRepository temaRepository;
     private final UnidadRepository unidadRepository;
+    private final TemaMapper temaMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
     public TemaService(TemaRepository temaRepository,
-                      UnidadRepository unidadRepository) {
+            UnidadRepository unidadRepository,
+            TemaMapper temaMapper) {
         this.temaRepository = temaRepository;
         this.unidadRepository = unidadRepository;
-    }
-
-    /**
-     * Convierte una entidad Tema a TemaResponse.
-     */
-    private TemaResponse toResponse(Tema tema) {
-        Unidad unidad = tema.getUnidad();
-        
-        // Construir AsignaturaResponse
-        AsignaturaResponse asignaturaResponse = new AsignaturaResponse(
-            unidad.getCurso().getAsignatura().getId(),
-            unidad.getCurso().getAsignatura().getCodigo(),
-            unidad.getCurso().getAsignatura().getNombre(),
-            unidad.getCurso().getAsignatura().getDescripcion(),
-            unidad.getCurso().getAsignatura().getImagenUrl(),
-            unidad.getCurso().getAsignatura().getCreatedAt(),
-            unidad.getCurso().getAsignatura().getUpdatedAt(),
-            unidad.getCurso().getAsignatura().getDeletedAt()
-        );
-        
-        // Construir RolResponse
-        RolResponse rolResponse = new RolResponse(
-            unidad.getCurso().getProfesor().getUsuario().getRol().getId(),
-            unidad.getCurso().getProfesor().getUsuario().getRol().getNombre(),
-            unidad.getCurso().getProfesor().getUsuario().getRol().getDescripcion(),
-            unidad.getCurso().getProfesor().getUsuario().getRol().getCreatedAt(),
-            unidad.getCurso().getProfesor().getUsuario().getRol().getUpdatedAt(),
-            unidad.getCurso().getProfesor().getUsuario().getRol().getDeletedAt()
-        );
-        
-        // Construir UsuarioResponse
-        UsuarioResponse usuarioResponse = new UsuarioResponse(
-            unidad.getCurso().getProfesor().getUsuario().getId(),
-            unidad.getCurso().getProfesor().getUsuario().getUsername(),
-            unidad.getCurso().getProfesor().getUsuario().getNombre(),
-            unidad.getCurso().getProfesor().getUsuario().getEmail(),
-            unidad.getCurso().getProfesor().getUsuario().getTelefono(),
-            unidad.getCurso().getProfesor().getUsuario().getActivo(),
-            unidad.getCurso().getProfesor().getUsuario().getFotoPerfilUrl(),
-            rolResponse,
-            unidad.getCurso().getProfesor().getUsuario().getCreatedAt(),
-            unidad.getCurso().getProfesor().getUsuario().getUpdatedAt(),
-            unidad.getCurso().getProfesor().getUsuario().getDeletedAt()
-        );
-        
-        // Construir ProfesorResponse
-        ProfesorResponse profesorResponse = new ProfesorResponse(
-            unidad.getCurso().getProfesor().getId(),
-            usuarioResponse,
-            unidad.getCurso().getProfesor().getEspecialidad(),
-            unidad.getCurso().getProfesor().getContrato(),
-            unidad.getCurso().getProfesor().getActivo(),
-            unidad.getCurso().getProfesor().getCreatedAt(),
-            unidad.getCurso().getProfesor().getUpdatedAt(),
-            unidad.getCurso().getProfesor().getDeletedAt()
-        );
-        
-        // Construir PeriodoResponse
-        PeriodoResponse periodoResponse = new PeriodoResponse(
-            unidad.getCurso().getPeriodo().getId(),
-            unidad.getCurso().getPeriodo().getNombre(),
-            unidad.getCurso().getPeriodo().getFechaInicio(),
-            unidad.getCurso().getPeriodo().getFechaFin(),
-            unidad.getCurso().getPeriodo().getActivo(),
-            unidad.getCurso().getPeriodo().getCreatedAt(),
-            unidad.getCurso().getPeriodo().getUpdatedAt(),
-            unidad.getCurso().getPeriodo().getDeletedAt()
-        );
-        
-        // Construir CursoResponse
-        CursoResponse cursoResponse = new CursoResponse(
-            unidad.getCurso().getId(),
-            asignaturaResponse,
-            profesorResponse,
-            periodoResponse,
-            unidad.getCurso().getNombreGrupo(),
-            unidad.getCurso().getAulaDefault(),
-            unidad.getCurso().getCupo(),
-            unidad.getCurso().getImagenUrl(),
-            unidad.getCurso().getCreatedAt(),
-            unidad.getCurso().getUpdatedAt(),
-            unidad.getCurso().getDeletedAt()
-        );
-        
-        // Construir UnidadResponse
-        UnidadResponse unidadResponse = new UnidadResponse(
-            unidad.getId(),
-            cursoResponse,
-            unidad.getTitulo(),
-            unidad.getDescripcion(),
-            unidad.getNumero(),
-            unidad.getDocumentoUrl(),
-            unidad.getDocumentoNombre(),
-            unidad.getCreatedAt(),
-            unidad.getUpdatedAt(),
-            unidad.getDeletedAt()
-        );
-
-        return new TemaResponse(
-            tema.getId(),
-            unidadResponse,
-            tema.getTitulo(),
-            tema.getDescripcion(),
-            tema.getNumero(),
-            tema.getDuracionMinutos(),
-            tema.getDocumentoUrl(),
-            tema.getDocumentoNombre(),
-            tema.getCreatedAt(),
-            tema.getUpdatedAt(),
-            tema.getDeletedAt()
-        );
+        this.temaMapper = temaMapper;
     }
 
     /**
@@ -161,7 +47,7 @@ public class TemaService {
     @Transactional(readOnly = true)
     public Page<TemaResponse> getAllTemas(Pageable pageable) {
         return temaRepository.findAllActive(pageable)
-                .map(this::toResponse);
+                .map(temaMapper::toResponse);
     }
 
     /**
@@ -171,7 +57,7 @@ public class TemaService {
     public TemaResponse getTemaById(String id) {
         Tema tema = temaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tema no encontrado con ID: " + id));
-        return toResponse(tema);
+        return temaMapper.toResponse(tema);
     }
 
     /**
@@ -180,7 +66,7 @@ public class TemaService {
     @Transactional(readOnly = true)
     public List<TemaResponse> getTemasByUnidadId(String unidadId) {
         return temaRepository.findByUnidadId(unidadId).stream()
-                .map(this::toResponse)
+                .map(temaMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -190,7 +76,7 @@ public class TemaService {
     @Transactional(readOnly = true)
     public List<TemaResponse> getTemasByTitulo(String titulo) {
         return temaRepository.findByTituloContaining(titulo).stream()
-                .map(this::toResponse)
+                .map(temaMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -200,7 +86,7 @@ public class TemaService {
     @Transactional(readOnly = true)
     public List<TemaResponse> getTemasDeleted() {
         return temaRepository.findAllDeleted().stream()
-                .map(this::toResponse)
+                .map(temaMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -222,7 +108,7 @@ public class TemaService {
         tema.setDocumentoNombre(request.documentoNombre());
 
         Tema savedTema = temaRepository.save(tema);
-        return toResponse(savedTema);
+        return temaMapper.toResponse(savedTema);
     }
 
     /**
@@ -252,7 +138,7 @@ public class TemaService {
         }
 
         Tema updatedTema = temaRepository.save(tema);
-        return toResponse(updatedTema);
+        return temaMapper.toResponse(updatedTema);
     }
 
     /**
@@ -282,6 +168,6 @@ public class TemaService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tema no encontrado con ID: " + id));
         tema.setDeletedAt(null);
         Tema restoredTema = temaRepository.save(tema);
-        return toResponse(restoredTema);
+        return temaMapper.toResponse(restoredTema);
     }
 }
