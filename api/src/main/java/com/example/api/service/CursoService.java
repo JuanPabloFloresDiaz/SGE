@@ -13,10 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.api.dto.request.CreateCursoRequest;
 import com.example.api.dto.request.UpdateCursoRequest;
-import com.example.api.dto.response.AsignaturaResponse;
 import com.example.api.dto.response.CursoResponse;
-import com.example.api.dto.response.PeriodoResponse;
-import com.example.api.dto.response.ProfesorResponse;
 import com.example.api.exception.ResourceNotFoundException;
 import com.example.api.model.Asignatura;
 import com.example.api.model.Curso;
@@ -26,6 +23,7 @@ import com.example.api.repository.AsignaturaRepository;
 import com.example.api.repository.CursoRepository;
 import com.example.api.repository.PeriodoRepository;
 import com.example.api.repository.ProfesorRepository;
+import com.example.api.mapper.CursoMapper;
 
 /**
  * Servicio que contiene la lógica de negocio para la gestión de cursos.
@@ -38,83 +36,26 @@ public class CursoService {
     private final AsignaturaRepository asignaturaRepository;
     private final ProfesorRepository profesorRepository;
     private final PeriodoRepository periodoRepository;
+    private final CursoMapper cursoMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
     public CursoService(CursoRepository cursoRepository,
-                       AsignaturaRepository asignaturaRepository,
-                       ProfesorRepository profesorRepository,
-                       PeriodoRepository periodoRepository) {
+            AsignaturaRepository asignaturaRepository,
+            ProfesorRepository profesorRepository,
+            PeriodoRepository periodoRepository,
+            CursoMapper cursoMapper) {
         this.cursoRepository = cursoRepository;
         this.asignaturaRepository = asignaturaRepository;
         this.profesorRepository = profesorRepository;
         this.periodoRepository = periodoRepository;
+        this.cursoMapper = cursoMapper;
     }
 
     /**
      * Convierte una entidad Curso a CursoResponse.
      */
-    private CursoResponse toResponse(Curso curso) {
-        AsignaturaResponse asignaturaResponse = null;
-        if (curso.getAsignatura() != null) {
-            Asignatura a = curso.getAsignatura();
-            asignaturaResponse = new AsignaturaResponse(
-                    a.getId(),
-                    a.getCodigo(),
-                    a.getNombre(),
-                    a.getDescripcion(),
-                    a.getImagenUrl(),
-                    a.getCreatedAt(),
-                    a.getUpdatedAt(),
-                    a.getDeletedAt()
-            );
-        }
-
-        ProfesorResponse profesorResponse = null;
-        if (curso.getProfesor() != null) {
-            Profesor p = curso.getProfesor();
-            profesorResponse = new ProfesorResponse(
-                    p.getId(),
-                    null, // UsuarioResponse simplificado para evitar recursión
-                    p.getEspecialidad(),
-                    p.getContrato(),
-                    p.getActivo(),
-                    p.getCreatedAt(),
-                    p.getUpdatedAt(),
-                    p.getDeletedAt()
-            );
-        }
-
-        PeriodoResponse periodoResponse = null;
-        if (curso.getPeriodo() != null) {
-            Periodo pe = curso.getPeriodo();
-            periodoResponse = new PeriodoResponse(
-                    pe.getId(),
-                    pe.getNombre(),
-                    pe.getFechaInicio(),
-                    pe.getFechaFin(),
-                    pe.getActivo(),
-                    pe.getCreatedAt(),
-                    pe.getUpdatedAt(),
-                    pe.getDeletedAt()
-            );
-        }
-
-        return new CursoResponse(
-                curso.getId(),
-                asignaturaResponse,
-                profesorResponse,
-                periodoResponse,
-                curso.getNombreGrupo(),
-                curso.getAulaDefault(),
-                curso.getCupo(),
-                curso.getImagenUrl(),
-                curso.getCreatedAt(),
-                curso.getUpdatedAt(),
-                curso.getDeletedAt()
-        );
-    }
 
     /**
      * Obtiene todos los cursos activos (paginados).
@@ -122,7 +63,7 @@ public class CursoService {
     @Transactional(readOnly = true)
     public Page<CursoResponse> getAllCursos(Pageable pageable) {
         return cursoRepository.findAllActive(pageable)
-                .map(this::toResponse);
+                .map(cursoMapper::toResponse);
     }
 
     /**
@@ -132,7 +73,7 @@ public class CursoService {
     public CursoResponse getCursoById(String id) {
         Curso curso = cursoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado con ID: " + id));
-        return toResponse(curso);
+        return cursoMapper.toResponse(curso);
     }
 
     /**
@@ -142,7 +83,7 @@ public class CursoService {
     public List<CursoResponse> getCursosByPeriodoId(String periodoId) {
         return cursoRepository.findByPeriodoId(periodoId)
                 .stream()
-                .map(this::toResponse)
+                .map(cursoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -153,7 +94,7 @@ public class CursoService {
     public List<CursoResponse> getCursosByProfesorId(String profesorId) {
         return cursoRepository.findByProfesorId(profesorId)
                 .stream()
-                .map(this::toResponse)
+                .map(cursoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -164,7 +105,7 @@ public class CursoService {
     public List<CursoResponse> getCursosByAsignaturaId(String asignaturaId) {
         return cursoRepository.findByAsignaturaId(asignaturaId)
                 .stream()
-                .map(this::toResponse)
+                .map(cursoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -175,7 +116,7 @@ public class CursoService {
     public List<CursoResponse> searchByNombreGrupo(String nombreGrupo) {
         return cursoRepository.searchByNombreGrupo(nombreGrupo)
                 .stream()
-                .map(this::toResponse)
+                .map(cursoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -186,7 +127,7 @@ public class CursoService {
     public List<CursoResponse> getCursosConCuposDisponibles() {
         return cursoRepository.findCursosConCuposDisponibles()
                 .stream()
-                .map(this::toResponse)
+                .map(cursoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -220,7 +161,7 @@ public class CursoService {
     public List<CursoResponse> getCursosDeleted() {
         return cursoRepository.findAllDeleted()
                 .stream()
-                .map(this::toResponse)
+                .map(cursoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -258,7 +199,7 @@ public class CursoService {
 
         // Guardar
         Curso cursoGuardado = cursoRepository.save(curso);
-        return toResponse(cursoGuardado);
+        return cursoMapper.toResponse(cursoGuardado);
     }
 
     /**
@@ -308,7 +249,7 @@ public class CursoService {
         }
 
         Curso cursoActualizado = cursoRepository.save(curso);
-        return toResponse(cursoActualizado);
+        return cursoMapper.toResponse(cursoActualizado);
     }
 
     /**
@@ -341,6 +282,6 @@ public class CursoService {
 
         curso.setDeletedAt(null);
         Curso cursoRestaurado = cursoRepository.save(curso);
-        return toResponse(cursoRestaurado);
+        return cursoMapper.toResponse(cursoRestaurado);
     }
 }
