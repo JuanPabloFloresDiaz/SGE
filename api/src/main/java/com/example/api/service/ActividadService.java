@@ -12,10 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.api.dto.request.CreateActividadRequest;
 import com.example.api.dto.request.UpdateActividadRequest;
 import com.example.api.dto.response.ActividadResponse;
-import com.example.api.dto.response.AsignaturaResponse;
-import com.example.api.dto.response.ProfesorResponse;
-import com.example.api.dto.response.RolResponse;
-import com.example.api.dto.response.UsuarioResponse;
 import com.example.api.exception.ResourceNotFoundException;
 import com.example.api.model.Actividad;
 import com.example.api.model.Asignatura;
@@ -23,6 +19,7 @@ import com.example.api.model.Profesor;
 import com.example.api.repository.ActividadRepository;
 import com.example.api.repository.AsignaturaRepository;
 import com.example.api.repository.ProfesorRepository;
+import com.example.api.mapper.ActividadMapper;
 
 /**
  * Servicio que contiene la lógica de negocio para la gestión de actividades.
@@ -34,87 +31,19 @@ public class ActividadService {
     private final ActividadRepository actividadRepository;
     private final AsignaturaRepository asignaturaRepository;
     private final ProfesorRepository profesorRepository;
+    private final ActividadMapper actividadMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
     public ActividadService(ActividadRepository actividadRepository,
-                           AsignaturaRepository asignaturaRepository,
-                           ProfesorRepository profesorRepository) {
+            AsignaturaRepository asignaturaRepository,
+            ProfesorRepository profesorRepository,
+            ActividadMapper actividadMapper) {
         this.actividadRepository = actividadRepository;
         this.asignaturaRepository = asignaturaRepository;
         this.profesorRepository = profesorRepository;
-    }
-
-    /**
-     * Convierte una entidad Actividad a ActividadResponse.
-     */
-    private ActividadResponse toResponse(Actividad actividad) {
-        // Construir AsignaturaResponse
-        Asignatura asignatura = actividad.getAsignatura();
-        AsignaturaResponse asignaturaResponse = new AsignaturaResponse(
-                asignatura.getId(),
-                asignatura.getCodigo(),
-                asignatura.getNombre(),
-                asignatura.getDescripcion(),
-                asignatura.getImagenUrl(),
-                asignatura.getCreatedAt(),
-                asignatura.getUpdatedAt(),
-                asignatura.getDeletedAt()
-        );
-
-        // Construir ProfesorResponse
-        Profesor profesor = actividad.getProfesor();
-        RolResponse rolResponse = new RolResponse(
-                profesor.getUsuario().getRol().getId(),
-                profesor.getUsuario().getRol().getNombre(),
-                profesor.getUsuario().getRol().getDescripcion(),
-                profesor.getUsuario().getRol().getCreatedAt(),
-                profesor.getUsuario().getRol().getUpdatedAt(),
-                profesor.getUsuario().getRol().getDeletedAt()
-        );
-
-        UsuarioResponse usuarioResponse = new UsuarioResponse(
-                profesor.getUsuario().getId(),
-                profesor.getUsuario().getUsername(),
-                profesor.getUsuario().getNombre(),
-                profesor.getUsuario().getEmail(),
-                profesor.getUsuario().getTelefono(),
-                profesor.getUsuario().getActivo(),
-                profesor.getUsuario().getFotoPerfilUrl(),
-                rolResponse,
-                profesor.getUsuario().getCreatedAt(),
-                profesor.getUsuario().getUpdatedAt(),
-                profesor.getUsuario().getDeletedAt()
-        );
-
-        ProfesorResponse profesorResponse = new ProfesorResponse(
-                profesor.getId(),
-                usuarioResponse,
-                profesor.getEspecialidad(),
-                profesor.getContrato(),
-                profesor.getActivo(),
-                profesor.getCreatedAt(),
-                profesor.getUpdatedAt(),
-                profesor.getDeletedAt()
-        );
-
-        return new ActividadResponse(
-                actividad.getId(),
-                asignaturaResponse,
-                profesorResponse,
-                actividad.getTitulo(),
-                actividad.getDescripcion(),
-                actividad.getFechaApertura(),
-                actividad.getFechaCierre(),
-                actividad.getImagenUrl(),
-                actividad.getDocumentoUrl(),
-                actividad.getDocumentoNombre(),
-                actividad.getActivo(),
-                actividad.getCreatedAt(),
-                actividad.getUpdatedAt(),
-                actividad.getDeletedAt()
-        );
+        this.actividadMapper = actividadMapper;
     }
 
     /**
@@ -123,7 +52,7 @@ public class ActividadService {
     @Transactional(readOnly = true)
     public Page<ActividadResponse> getAllActividades(Pageable pageable) {
         return actividadRepository.findAllActive(pageable)
-                .map(this::toResponse);
+                .map(actividadMapper::toResponse);
     }
 
     /**
@@ -133,7 +62,7 @@ public class ActividadService {
     public ActividadResponse getActividadById(String id) {
         Actividad actividad = actividadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con ID: " + id));
-        return toResponse(actividad);
+        return actividadMapper.toResponse(actividad);
     }
 
     /**
@@ -142,7 +71,7 @@ public class ActividadService {
     @Transactional(readOnly = true)
     public List<ActividadResponse> getActividadesByAsignaturaId(String asignaturaId) {
         return actividadRepository.findByAsignaturaId(asignaturaId).stream()
-                .map(this::toResponse)
+                .map(actividadMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -152,7 +81,7 @@ public class ActividadService {
     @Transactional(readOnly = true)
     public List<ActividadResponse> getActividadesByProfesorId(String profesorId) {
         return actividadRepository.findByProfesorId(profesorId).stream()
-                .map(this::toResponse)
+                .map(actividadMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -163,7 +92,7 @@ public class ActividadService {
     public List<ActividadResponse> getActividadesAbiertas() {
         LocalDateTime ahora = LocalDateTime.now();
         return actividadRepository.findActividadesAbiertas(ahora).stream()
-                .map(this::toResponse)
+                .map(actividadMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -174,7 +103,7 @@ public class ActividadService {
     public List<ActividadResponse> getProximasActividades() {
         LocalDateTime ahora = LocalDateTime.now();
         return actividadRepository.findProximasActividades(ahora).stream()
-                .map(this::toResponse)
+                .map(actividadMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -184,7 +113,7 @@ public class ActividadService {
     @Transactional(readOnly = true)
     public List<ActividadResponse> getActividadesDeleted() {
         return actividadRepository.findAllDeleted().stream()
-                .map(this::toResponse)
+                .map(actividadMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -194,15 +123,17 @@ public class ActividadService {
     public ActividadResponse createActividad(CreateActividadRequest request) {
         // Validar que la asignatura existe
         Asignatura asignatura = asignaturaRepository.findById(request.asignaturaId())
-                .orElseThrow(() -> new ResourceNotFoundException("Asignatura no encontrada con ID: " + request.asignaturaId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Asignatura no encontrada con ID: " + request.asignaturaId()));
 
         // Validar que el profesor existe
         Profesor profesor = profesorRepository.findById(request.profesorId())
-                .orElseThrow(() -> new ResourceNotFoundException("Profesor no encontrado con ID: " + request.profesorId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Profesor no encontrado con ID: " + request.profesorId()));
 
         // Validar que la fecha de cierre sea posterior a la de apertura
-        if (request.fechaCierre().isBefore(request.fechaApertura()) || 
-            request.fechaCierre().isEqual(request.fechaApertura())) {
+        if (request.fechaCierre().isBefore(request.fechaApertura()) ||
+                request.fechaCierre().isEqual(request.fechaApertura())) {
             throw new IllegalArgumentException("La fecha de cierre debe ser posterior a la fecha de apertura");
         }
 
@@ -219,7 +150,7 @@ public class ActividadService {
         actividad.setActivo(request.activo() != null ? request.activo() : true);
 
         Actividad saved = actividadRepository.save(actividad);
-        return toResponse(saved);
+        return actividadMapper.toResponse(saved);
     }
 
     /**
@@ -231,13 +162,15 @@ public class ActividadService {
 
         if (request.asignaturaId() != null) {
             Asignatura asignatura = asignaturaRepository.findById(request.asignaturaId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Asignatura no encontrada con ID: " + request.asignaturaId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Asignatura no encontrada con ID: " + request.asignaturaId()));
             actividad.setAsignatura(asignatura);
         }
 
         if (request.profesorId() != null) {
             Profesor profesor = profesorRepository.findById(request.profesorId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Profesor no encontrado con ID: " + request.profesorId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Profesor no encontrado con ID: " + request.profesorId()));
             actividad.setProfesor(profesor);
         }
 
@@ -255,8 +188,8 @@ public class ActividadService {
         }
 
         // Validar fechas si se actualizaron ambas
-        if (actividad.getFechaCierre().isBefore(actividad.getFechaApertura()) || 
-            actividad.getFechaCierre().isEqual(actividad.getFechaApertura())) {
+        if (actividad.getFechaCierre().isBefore(actividad.getFechaApertura()) ||
+                actividad.getFechaCierre().isEqual(actividad.getFechaApertura())) {
             throw new IllegalArgumentException("La fecha de cierre debe ser posterior a la fecha de apertura");
         }
 
@@ -274,7 +207,7 @@ public class ActividadService {
         }
 
         Actividad updated = actividadRepository.save(actividad);
-        return toResponse(updated);
+        return actividadMapper.toResponse(updated);
     }
 
     /**
@@ -304,6 +237,6 @@ public class ActividadService {
                 .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con ID: " + id));
         actividad.setDeletedAt(null);
         Actividad restored = actividadRepository.save(actividad);
-        return toResponse(restored);
+        return actividadMapper.toResponse(restored);
     }
 }
