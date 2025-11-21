@@ -14,44 +14,30 @@ import com.example.api.dto.request.CreatePeriodoRequest;
 import com.example.api.dto.request.UpdatePeriodoRequest;
 import com.example.api.dto.response.PeriodoResponse;
 import com.example.api.exception.ResourceNotFoundException;
+import com.example.api.mapper.PeriodoMapper;
 import com.example.api.model.Periodo;
 import com.example.api.repository.PeriodoRepository;
 
 /**
- * Servicio que contiene la lógica de negocio para la gestión de periodos académicos.
+ * Servicio que contiene la lógica de negocio para la gestión de periodos
+ * académicos.
  */
 @Service
 @Transactional
 public class PeriodoService {
 
     private final PeriodoRepository periodoRepository;
+    private final PeriodoMapper periodoMapper;
 
     /**
      * Constructor con inyección de dependencias.
      *
      * @param periodoRepository Repositorio de periodos
+     * @param periodoMapper     Mapper de periodos
      */
-    public PeriodoService(PeriodoRepository periodoRepository) {
+    public PeriodoService(PeriodoRepository periodoRepository, PeriodoMapper periodoMapper) {
         this.periodoRepository = periodoRepository;
-    }
-
-    /**
-     * Convierte una entidad Periodo a PeriodoResponse.
-     *
-     * @param periodo La entidad Periodo
-     * @return El DTO PeriodoResponse
-     */
-    private PeriodoResponse toResponse(Periodo periodo) {
-        return new PeriodoResponse(
-                periodo.getId(),
-                periodo.getNombre(),
-                periodo.getFechaInicio(),
-                periodo.getFechaFin(),
-                periodo.getActivo(),
-                periodo.getCreatedAt(),
-                periodo.getUpdatedAt(),
-                periodo.getDeletedAt()
-        );
+        this.periodoMapper = periodoMapper;
     }
 
     /**
@@ -63,7 +49,7 @@ public class PeriodoService {
     @Transactional(readOnly = true)
     public Page<PeriodoResponse> getAllPeriodos(Pageable pageable) {
         return periodoRepository.findAllActive(pageable)
-                .map(this::toResponse);
+                .map(periodoMapper::toResponse);
     }
 
     /**
@@ -77,7 +63,7 @@ public class PeriodoService {
     public PeriodoResponse getPeriodoById(String id) {
         Periodo periodo = periodoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Periodo no encontrado con ID: " + id));
-        return toResponse(periodo);
+        return periodoMapper.toResponse(periodo);
     }
 
     /**
@@ -90,7 +76,7 @@ public class PeriodoService {
     public List<PeriodoResponse> searchByNombre(String nombre) {
         return periodoRepository.searchByNombre(nombre)
                 .stream()
-                .map(this::toResponse)
+                .map(periodoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -103,7 +89,7 @@ public class PeriodoService {
     public List<PeriodoResponse> getPeriodosActivos() {
         return periodoRepository.findByActivoTrue()
                 .stream()
-                .map(this::toResponse)
+                .map(periodoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -116,7 +102,7 @@ public class PeriodoService {
     public List<PeriodoResponse> getPeriodosDeleted() {
         return periodoRepository.findAllDeleted()
                 .stream()
-                .map(this::toResponse)
+                .map(periodoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -131,7 +117,7 @@ public class PeriodoService {
         LocalDate hoy = LocalDate.now();
         Periodo periodo = periodoRepository.findPeriodoActual(hoy)
                 .orElseThrow(() -> new ResourceNotFoundException("No existe un periodo actual activo"));
-        return toResponse(periodo);
+        return periodoMapper.toResponse(periodo);
     }
 
     /**
@@ -155,13 +141,13 @@ public class PeriodoService {
 
         // Guardar
         Periodo periodoGuardado = periodoRepository.save(periodo);
-        return toResponse(periodoGuardado);
+        return periodoMapper.toResponse(periodoGuardado);
     }
 
     /**
      * Actualiza un periodo existente.
      *
-     * @param id El ID del periodo a actualizar
+     * @param id      El ID del periodo a actualizar
      * @param request Datos a actualizar
      * @return El periodo actualizado
      * @throws ResourceNotFoundException si el periodo no existe
@@ -196,7 +182,7 @@ public class PeriodoService {
         }
 
         Periodo periodoActualizado = periodoRepository.save(periodo);
-        return toResponse(periodoActualizado);
+        return periodoMapper.toResponse(periodoActualizado);
     }
 
     /**
@@ -241,6 +227,6 @@ public class PeriodoService {
         periodo.setDeletedAt(null);
         periodo.setActivo(true);
         Periodo periodoRestaurado = periodoRepository.save(periodo);
-        return toResponse(periodoRestaurado);
+        return periodoMapper.toResponse(periodoRestaurado);
     }
 }
