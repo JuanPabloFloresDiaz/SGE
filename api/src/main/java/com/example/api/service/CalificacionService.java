@@ -19,16 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.api.dto.request.CreateCalificacionRequest;
 import com.example.api.dto.request.UpdateCalificacionRequest;
-import com.example.api.dto.response.AsignaturaResponse;
 import com.example.api.dto.response.CalificacionResponse;
-import com.example.api.dto.response.CursoResponse;
-import com.example.api.dto.response.EstudianteResponse;
-import com.example.api.dto.response.EvaluacionResponse;
-import com.example.api.dto.response.PeriodoResponse;
-import com.example.api.dto.response.ProfesorResponse;
-import com.example.api.dto.response.RolResponse;
-import com.example.api.dto.response.TipoEvaluacionResponse;
-import com.example.api.dto.response.UsuarioResponse;
 import com.example.api.exception.ResourceNotFoundException;
 import com.example.api.model.Calificacion;
 import com.example.api.model.Estudiante;
@@ -36,10 +27,12 @@ import com.example.api.model.Evaluacion;
 import com.example.api.repository.CalificacionRepository;
 import com.example.api.repository.EstudianteRepository;
 import com.example.api.repository.EvaluacionRepository;
+import com.example.api.mapper.CalificacionMapper;
 
 /**
  * Servicio que contiene la lógica de negocio para la gestión de calificaciones.
- * Implementa múltiples estructuras de datos: Lista Ligada, BST, Búsqueda Binaria, HashMap, Burbuja.
+ * Implementa múltiples estructuras de datos: Lista Ligada, BST, Búsqueda
+ * Binaria, HashMap, Burbuja.
  */
 @Service
 @Transactional
@@ -48,171 +41,19 @@ public class CalificacionService {
     private final CalificacionRepository calificacionRepository;
     private final EvaluacionRepository evaluacionRepository;
     private final EstudianteRepository estudianteRepository;
+    private final CalificacionMapper calificacionMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
     public CalificacionService(CalificacionRepository calificacionRepository,
-                               EvaluacionRepository evaluacionRepository,
-                               EstudianteRepository estudianteRepository) {
+            EvaluacionRepository evaluacionRepository,
+            EstudianteRepository estudianteRepository,
+            CalificacionMapper calificacionMapper) {
         this.calificacionRepository = calificacionRepository;
         this.evaluacionRepository = evaluacionRepository;
         this.estudianteRepository = estudianteRepository;
-    }
-
-    /**
-     * Convierte una entidad Calificacion a CalificacionResponse.
-     */
-    private CalificacionResponse toResponse(Calificacion calificacion) {
-        // Construir EvaluacionResponse
-        Evaluacion evaluacion = calificacion.getEvaluacion();
-        
-        AsignaturaResponse asignaturaResponse = new AsignaturaResponse(
-                evaluacion.getCurso().getAsignatura().getId(),
-                evaluacion.getCurso().getAsignatura().getCodigo(),
-                evaluacion.getCurso().getAsignatura().getNombre(),
-                evaluacion.getCurso().getAsignatura().getDescripcion(),
-                evaluacion.getCurso().getAsignatura().getImagenUrl(),
-                evaluacion.getCurso().getAsignatura().getCreatedAt(),
-                evaluacion.getCurso().getAsignatura().getUpdatedAt(),
-                evaluacion.getCurso().getAsignatura().getDeletedAt()
-        );
-
-        RolResponse rolResponse = new RolResponse(
-                evaluacion.getCurso().getProfesor().getUsuario().getRol().getId(),
-                evaluacion.getCurso().getProfesor().getUsuario().getRol().getNombre(),
-                evaluacion.getCurso().getProfesor().getUsuario().getRol().getDescripcion(),
-                evaluacion.getCurso().getProfesor().getUsuario().getRol().getCreatedAt(),
-                evaluacion.getCurso().getProfesor().getUsuario().getRol().getUpdatedAt(),
-                evaluacion.getCurso().getProfesor().getUsuario().getRol().getDeletedAt()
-        );
-
-        UsuarioResponse usuarioResponse = new UsuarioResponse(
-                evaluacion.getCurso().getProfesor().getUsuario().getId(),
-                evaluacion.getCurso().getProfesor().getUsuario().getUsername(),
-                evaluacion.getCurso().getProfesor().getUsuario().getNombre(),
-                evaluacion.getCurso().getProfesor().getUsuario().getEmail(),
-                evaluacion.getCurso().getProfesor().getUsuario().getTelefono(),
-                evaluacion.getCurso().getProfesor().getUsuario().getActivo(),
-                evaluacion.getCurso().getProfesor().getUsuario().getFotoPerfilUrl(),
-                rolResponse,
-                evaluacion.getCurso().getProfesor().getUsuario().getCreatedAt(),
-                evaluacion.getCurso().getProfesor().getUsuario().getUpdatedAt(),
-                evaluacion.getCurso().getProfesor().getUsuario().getDeletedAt()
-        );
-
-        ProfesorResponse profesorResponse = new ProfesorResponse(
-                evaluacion.getCurso().getProfesor().getId(),
-                usuarioResponse,
-                evaluacion.getCurso().getProfesor().getEspecialidad(),
-                evaluacion.getCurso().getProfesor().getContrato(),
-                evaluacion.getCurso().getProfesor().getActivo(),
-                evaluacion.getCurso().getProfesor().getCreatedAt(),
-                evaluacion.getCurso().getProfesor().getUpdatedAt(),
-                evaluacion.getCurso().getProfesor().getDeletedAt()
-        );
-
-        PeriodoResponse periodoResponse = new PeriodoResponse(
-                evaluacion.getCurso().getPeriodo().getId(),
-                evaluacion.getCurso().getPeriodo().getNombre(),
-                evaluacion.getCurso().getPeriodo().getFechaInicio(),
-                evaluacion.getCurso().getPeriodo().getFechaFin(),
-                evaluacion.getCurso().getPeriodo().getActivo(),
-                evaluacion.getCurso().getPeriodo().getCreatedAt(),
-                evaluacion.getCurso().getPeriodo().getUpdatedAt(),
-                evaluacion.getCurso().getPeriodo().getDeletedAt()
-        );
-
-        CursoResponse cursoResponse = new CursoResponse(
-                evaluacion.getCurso().getId(),
-                asignaturaResponse,
-                profesorResponse,
-                periodoResponse,
-                evaluacion.getCurso().getNombreGrupo(),
-                evaluacion.getCurso().getAulaDefault(),
-                evaluacion.getCurso().getCupo(),
-                evaluacion.getCurso().getImagenUrl(),
-                evaluacion.getCurso().getCreatedAt(),
-                evaluacion.getCurso().getUpdatedAt(),
-                evaluacion.getCurso().getDeletedAt()
-        );
-
-        TipoEvaluacionResponse tipoResponse = new TipoEvaluacionResponse(
-                evaluacion.getTipoEvaluacion().getId(),
-                evaluacion.getTipoEvaluacion().getNombre(),
-                evaluacion.getTipoEvaluacion().getDescripcion(),
-                evaluacion.getTipoEvaluacion().getPeso(),
-                evaluacion.getTipoEvaluacion().getCreatedAt(),
-                evaluacion.getTipoEvaluacion().getUpdatedAt(),
-                evaluacion.getTipoEvaluacion().getDeletedAt()
-        );
-
-        EvaluacionResponse evaluacionResponse = new EvaluacionResponse(
-                evaluacion.getId(),
-                cursoResponse,
-                tipoResponse,
-                evaluacion.getNombre(),
-                evaluacion.getFecha(),
-                evaluacion.getPeso(),
-                evaluacion.getPublicado(),
-                evaluacion.getDocumentoUrl(),
-                evaluacion.getDocumentoNombre(),
-                evaluacion.getCreatedAt(),
-                evaluacion.getUpdatedAt(),
-                evaluacion.getDeletedAt()
-        );
-
-        // Construir EstudianteResponse
-        Estudiante estudiante = calificacion.getEstudiante();
-        
-        RolResponse estudianteRolResponse = new RolResponse(
-                estudiante.getUsuario().getRol().getId(),
-                estudiante.getUsuario().getRol().getNombre(),
-                estudiante.getUsuario().getRol().getDescripcion(),
-                estudiante.getUsuario().getRol().getCreatedAt(),
-                estudiante.getUsuario().getRol().getUpdatedAt(),
-                estudiante.getUsuario().getRol().getDeletedAt()
-        );
-
-        UsuarioResponse estudianteUsuarioResponse = new UsuarioResponse(
-                estudiante.getUsuario().getId(),
-                estudiante.getUsuario().getUsername(),
-                estudiante.getUsuario().getNombre(),
-                estudiante.getUsuario().getEmail(),
-                estudiante.getUsuario().getTelefono(),
-                estudiante.getUsuario().getActivo(),
-                estudiante.getUsuario().getFotoPerfilUrl(),
-                estudianteRolResponse,
-                estudiante.getUsuario().getCreatedAt(),
-                estudiante.getUsuario().getUpdatedAt(),
-                estudiante.getUsuario().getDeletedAt()
-        );
-
-        EstudianteResponse estudianteResponse = new EstudianteResponse(
-                estudiante.getId(),
-                estudianteUsuarioResponse,
-                estudiante.getCodigoEstudiante(),
-                estudiante.getFechaNacimiento(),
-                estudiante.getDireccion(),
-                estudiante.getGenero(),
-                estudiante.getIngreso(),
-                estudiante.getActivo(),
-                estudiante.getFotoUrl(),
-                estudiante.getCreatedAt(),
-                estudiante.getUpdatedAt(),
-                estudiante.getDeletedAt()
-        );
-
-        return new CalificacionResponse(
-                calificacion.getId(),
-                evaluacionResponse,
-                estudianteResponse,
-                calificacion.getNota(),
-                calificacion.getComentario(),
-                calificacion.getCreatedAt(),
-                calificacion.getUpdatedAt(),
-                calificacion.getDeletedAt()
-        );
+        this.calificacionMapper = calificacionMapper;
     }
 
     /**
@@ -221,7 +62,7 @@ public class CalificacionService {
     @Transactional(readOnly = true)
     public Page<CalificacionResponse> getAllCalificaciones(Pageable pageable) {
         return calificacionRepository.findAllActive(pageable)
-                .map(this::toResponse);
+                .map(calificacionMapper::toResponse);
     }
 
     /**
@@ -231,7 +72,7 @@ public class CalificacionService {
     public CalificacionResponse getCalificacionById(String id) {
         Calificacion calificacion = calificacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Calificación no encontrada con ID: " + id));
-        return toResponse(calificacion);
+        return calificacionMapper.toResponse(calificacion);
     }
 
     /**
@@ -240,7 +81,7 @@ public class CalificacionService {
     @Transactional(readOnly = true)
     public List<CalificacionResponse> getCalificacionesByEstudianteId(String estudianteId) {
         return calificacionRepository.findByEstudianteId(estudianteId).stream()
-                .map(this::toResponse)
+                .map(calificacionMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -250,13 +91,14 @@ public class CalificacionService {
     @Transactional(readOnly = true)
     public List<CalificacionResponse> getCalificacionesByEvaluacionId(String evaluacionId) {
         return calificacionRepository.findByEvaluacionId(evaluacionId).stream()
-                .map(this::toResponse)
+                .map(calificacionMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
     /**
      * Obtiene el historial de calificaciones de un estudiante usando Lista Ligada.
-     * Implementa una LinkedList donde las calificaciones más recientes se insertan al inicio.
+     * Implementa una LinkedList donde las calificaciones más recientes se insertan
+     * al inicio.
      * 
      * Complejidad de inserción: O(1) al insertar al inicio
      * Uso: Mantener historial ordenado cronológicamente (más recientes primero)
@@ -264,17 +106,17 @@ public class CalificacionService {
     @Transactional(readOnly = true)
     public List<CalificacionResponse> getHistorialEstudiante(String estudianteId) {
         List<Calificacion> calificaciones = calificacionRepository.findByEstudianteId(estudianteId);
-        
+
         // Implementar Lista Ligada (LinkedList) para historial
         // Las calificaciones más recientes se insertan al inicio
         LinkedList<CalificacionResponse> historial = new LinkedList<>();
-        
+
         // Insertar al inicio (addFirst) para mantener más recientes primero
         // Complejidad O(1) por inserción
         for (Calificacion calif : calificaciones) {
-            historial.addFirst(toResponse(calif));
+            historial.addFirst(calificacionMapper.toResponse(calif));
         }
-        
+
         return historial;
     }
 
@@ -284,18 +126,20 @@ public class CalificacionService {
     @Transactional(readOnly = true)
     public Map<String, Object> calcularPromedioEstudiante(String estudianteId) {
         Double promedio = calificacionRepository.calcularPromedioEstudiante(estudianteId);
-        
+
         Map<String, Object> resultado = new HashMap<>();
         resultado.put("estudianteId", estudianteId);
-        resultado.put("promedio", promedio != null ? 
-                BigDecimal.valueOf(promedio).setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO);
-        
+        resultado.put("promedio",
+                promedio != null ? BigDecimal.valueOf(promedio).setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO);
+
         return resultado;
     }
 
     /**
-     * Obtiene un ranking general de estudiantes ordenado por nota promedio usando TreeMap (BST).
-     * Implementa un árbol BST (TreeMap) para mantener estudiantes ordenados por promedio.
+     * Obtiene un ranking general de estudiantes ordenado por nota promedio usando
+     * TreeMap (BST).
+     * Implementa un árbol BST (TreeMap) para mantener estudiantes ordenados por
+     * promedio.
      * 
      * Complejidad: O(n log n) para construcción del árbol
      * Uso: Mantener ranking ordenado automáticamente, búsqueda eficiente
@@ -303,11 +147,11 @@ public class CalificacionService {
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getRankingGeneral() {
         List<Calificacion> todasCalificaciones = calificacionRepository.findAllActive();
-        
+
         // Usar TreeMap (implementación de BST) para ordenar por promedio
         // TreeMap mantiene las claves ordenadas automáticamente
         Map<String, List<BigDecimal>> calificacionesPorEstudiante = new HashMap<>();
-        
+
         // Agrupar calificaciones por estudiante
         for (Calificacion calif : todasCalificaciones) {
             String estudianteId = calif.getEstudiante().getId();
@@ -315,20 +159,20 @@ public class CalificacionService {
                     .computeIfAbsent(estudianteId, k -> new ArrayList<>())
                     .add(calif.getNota());
         }
-        
+
         // Calcular promedios y usar TreeMap para ordenar (BST)
         TreeMap<BigDecimal, List<Map<String, Object>>> rankingBST = new TreeMap<>(Collections.reverseOrder());
-        
+
         for (Map.Entry<String, List<BigDecimal>> entry : calificacionesPorEstudiante.entrySet()) {
             String estudianteId = entry.getKey();
             List<BigDecimal> notas = entry.getValue();
-            
+
             BigDecimal suma = notas.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
             BigDecimal promedio = suma.divide(BigDecimal.valueOf(notas.size()), 2, RoundingMode.HALF_UP);
-            
+
             Estudiante estudiante = estudianteRepository.findById(estudianteId)
                     .orElse(null);
-            
+
             if (estudiante != null) {
                 Map<String, Object> info = new HashMap<>();
                 info.put("estudianteId", estudianteId);
@@ -336,18 +180,18 @@ public class CalificacionService {
                 info.put("nombre", estudiante.getUsuario().getNombre());
                 info.put("promedio", promedio);
                 info.put("totalCalificaciones", notas.size());
-                
+
                 // Insertar en BST (TreeMap mantiene orden automáticamente)
                 rankingBST.computeIfAbsent(promedio, k -> new ArrayList<>()).add(info);
             }
         }
-        
+
         // Aplanar el resultado manteniendo el orden del BST
         List<Map<String, Object>> ranking = new ArrayList<>();
         for (List<Map<String, Object>> estudiantesConMismoPromedio : rankingBST.values()) {
             ranking.addAll(estudiantesConMismoPromedio);
         }
-        
+
         return ranking;
     }
 
@@ -357,27 +201,27 @@ public class CalificacionService {
     @Transactional(readOnly = true)
     public List<Map<String, Object>> getRankingCurso(String cursoId) {
         List<Calificacion> calificacionesCurso = calificacionRepository.findByCursoId(cursoId);
-        
+
         Map<String, List<BigDecimal>> calificacionesPorEstudiante = new HashMap<>();
-        
+
         for (Calificacion calif : calificacionesCurso) {
             String estudianteId = calif.getEstudiante().getId();
             calificacionesPorEstudiante
                     .computeIfAbsent(estudianteId, k -> new ArrayList<>())
                     .add(calif.getNota());
         }
-        
+
         TreeMap<BigDecimal, List<Map<String, Object>>> rankingBST = new TreeMap<>(Collections.reverseOrder());
-        
+
         for (Map.Entry<String, List<BigDecimal>> entry : calificacionesPorEstudiante.entrySet()) {
             String estudianteId = entry.getKey();
             List<BigDecimal> notas = entry.getValue();
-            
+
             BigDecimal suma = notas.stream().reduce(BigDecimal.ZERO, BigDecimal::add);
             BigDecimal promedio = suma.divide(BigDecimal.valueOf(notas.size()), 2, RoundingMode.HALF_UP);
-            
+
             Estudiante estudiante = estudianteRepository.findById(estudianteId).orElse(null);
-            
+
             if (estudiante != null) {
                 Map<String, Object> info = new HashMap<>();
                 info.put("estudianteId", estudianteId);
@@ -385,16 +229,16 @@ public class CalificacionService {
                 info.put("nombre", estudiante.getUsuario().getNombre());
                 info.put("promedio", promedio);
                 info.put("totalCalificaciones", notas.size());
-                
+
                 rankingBST.computeIfAbsent(promedio, k -> new ArrayList<>()).add(info);
             }
         }
-        
+
         List<Map<String, Object>> ranking = new ArrayList<>();
         for (List<Map<String, Object>> estudiantesConMismoPromedio : rankingBST.values()) {
             ranking.addAll(estudiantesConMismoPromedio);
         }
-        
+
         return ranking;
     }
 
@@ -409,9 +253,9 @@ public class CalificacionService {
     public List<CalificacionResponse> buscarPorRangoNota(BigDecimal min, BigDecimal max) {
         // Obtener calificaciones en el rango usando query (más eficiente)
         List<Calificacion> calificaciones = calificacionRepository.findByNotaRange(min, max);
-        
+
         return calificaciones.stream()
-                .map(this::toResponse)
+                .map(calificacionMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -425,17 +269,17 @@ public class CalificacionService {
     @Transactional(readOnly = true)
     public List<CalificacionResponse> ordenarPorNota() {
         List<Calificacion> calificaciones = new ArrayList<>(calificacionRepository.findAllActive());
-        
+
         int n = calificaciones.size();
-        
+
         // Algoritmo de Burbuja (Bubble Sort)
         for (int i = 0; i < n - 1; i++) {
             boolean swapped = false;
-            
+
             for (int j = 0; j < n - i - 1; j++) {
                 Calificacion actual = calificaciones.get(j);
                 Calificacion siguiente = calificaciones.get(j + 1);
-                
+
                 // Ordenar de mayor a menor nota
                 if (actual.getNota().compareTo(siguiente.getNota()) < 0) {
                     calificaciones.set(j, siguiente);
@@ -443,15 +287,15 @@ public class CalificacionService {
                     swapped = true;
                 }
             }
-            
+
             // Optimización: si no hubo intercambios, ya está ordenado
             if (!swapped) {
                 break;
             }
         }
-        
+
         return calificaciones.stream()
-                .map(this::toResponse)
+                .map(calificacionMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -465,20 +309,20 @@ public class CalificacionService {
     @Transactional(readOnly = true)
     public Map<String, Object> getEstadisticas() {
         List<Calificacion> calificaciones = calificacionRepository.findAllActive();
-        
+
         // Usar HashMap para contar distribución de notas
         HashMap<String, Integer> distribucion = new HashMap<>();
-        distribucion.put("0-60", 0);      // Reprobado
-        distribucion.put("61-70", 0);     // Suficiente
-        distribucion.put("71-80", 0);     // Bueno
-        distribucion.put("81-90", 0);     // Notable
-        distribucion.put("91-100", 0);    // Sobresaliente
-        
+        distribucion.put("0-60", 0); // Reprobado
+        distribucion.put("61-70", 0); // Suficiente
+        distribucion.put("71-80", 0); // Bueno
+        distribucion.put("81-90", 0); // Notable
+        distribucion.put("91-100", 0); // Sobresaliente
+
         // Contar calificaciones por rango
         for (Calificacion calif : calificaciones) {
             BigDecimal nota = calif.getNota();
             double notaDouble = nota.doubleValue();
-            
+
             if (notaDouble <= 60) {
                 distribucion.put("0-60", distribucion.get("0-60") + 1);
             } else if (notaDouble <= 70) {
@@ -491,20 +335,20 @@ public class CalificacionService {
                 distribucion.put("91-100", distribucion.get("91-100") + 1);
             }
         }
-        
+
         // Calcular estadísticas adicionales
         int total = calificaciones.size();
         BigDecimal suma = calificaciones.stream()
                 .map(Calificacion::getNota)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-        BigDecimal promedioGeneral = total > 0 ? 
-                suma.divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
-        
+        BigDecimal promedioGeneral = total > 0 ? suma.divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
         Map<String, Object> estadisticas = new HashMap<>();
         estadisticas.put("totalCalificaciones", total);
         estadisticas.put("promedioGeneral", promedioGeneral);
         estadisticas.put("distribucion", distribucion);
-        
+
         return estadisticas;
     }
 
@@ -514,7 +358,7 @@ public class CalificacionService {
     @Transactional(readOnly = true)
     public List<CalificacionResponse> getCalificacionesDeleted() {
         return calificacionRepository.findAllDeleted().stream()
-                .map(this::toResponse)
+                .map(calificacionMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -524,11 +368,13 @@ public class CalificacionService {
     public CalificacionResponse createCalificacion(CreateCalificacionRequest request) {
         // Validar que la evaluación existe
         Evaluacion evaluacion = evaluacionRepository.findById(request.evaluacionId())
-                .orElseThrow(() -> new ResourceNotFoundException("Evaluación no encontrada con ID: " + request.evaluacionId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Evaluación no encontrada con ID: " + request.evaluacionId()));
 
         // Validar que el estudiante existe
         Estudiante estudiante = estudianteRepository.findById(request.estudianteId())
-                .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con ID: " + request.estudianteId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Estudiante no encontrado con ID: " + request.estudianteId()));
 
         Calificacion calificacion = new Calificacion();
         calificacion.setEvaluacion(evaluacion);
@@ -537,7 +383,7 @@ public class CalificacionService {
         calificacion.setComentario(request.comentario());
 
         Calificacion saved = calificacionRepository.save(calificacion);
-        return toResponse(saved);
+        return calificacionMapper.toResponse(saved);
     }
 
     /**
@@ -555,7 +401,7 @@ public class CalificacionService {
         }
 
         Calificacion updated = calificacionRepository.save(calificacion);
-        return toResponse(updated);
+        return calificacionMapper.toResponse(updated);
     }
 
     /**
@@ -585,6 +431,6 @@ public class CalificacionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Calificación no encontrada con ID: " + id));
         calificacion.setDeletedAt(null);
         Calificacion restored = calificacionRepository.save(calificacion);
-        return toResponse(restored);
+        return calificacionMapper.toResponse(restored);
     }
 }
