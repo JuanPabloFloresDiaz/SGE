@@ -11,10 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.api.dto.request.CreateUsuarioRequest;
 import com.example.api.dto.request.UpdateUsuarioRequest;
-import com.example.api.dto.response.RolResponse;
 import com.example.api.dto.response.UsuarioResponse;
 import com.example.api.exception.DuplicateResourceException;
 import com.example.api.exception.ResourceNotFoundException;
+import com.example.api.mapper.UsuarioMapper;
 import com.example.api.model.Rol;
 import com.example.api.model.Usuario;
 import com.example.api.repository.RolRepository;
@@ -30,49 +30,21 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
     private final RolRepository rolRepository;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final UsuarioMapper usuarioMapper;
 
     /**
      * Constructor con inyección de dependencias.
      *
      * @param usuarioRepository Repositorio de usuarios
-     * @param rolRepository Repositorio de roles
+     * @param rolRepository     Repositorio de roles
+     * @param usuarioMapper     Mapper de usuarios
      */
-    public UsuarioService(UsuarioRepository usuarioRepository, RolRepository rolRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, RolRepository rolRepository,
+            UsuarioMapper usuarioMapper) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
-    }
-
-    /**
-     * Convierte una entidad Usuario a UsuarioResponse.
-     * Método auxiliar para evitar problemas de Lombok en el IDE.
-     *
-     * @param usuario La entidad Usuario
-     * @return El DTO UsuarioResponse
-     */
-    private UsuarioResponse toResponse(Usuario usuario) {
-        RolResponse rolResponse = usuario.getRol() != null ? new RolResponse(
-                usuario.getRol().getId(),
-                usuario.getRol().getNombre(),
-                usuario.getRol().getDescripcion(),
-                usuario.getRol().getCreatedAt(),
-                usuario.getRol().getUpdatedAt(),
-                usuario.getRol().getDeletedAt()
-        ) : null;
-
-        return new UsuarioResponse(
-                usuario.getId(),
-                usuario.getUsername(),
-                usuario.getNombre(),
-                usuario.getEmail(),
-                usuario.getTelefono(),
-                usuario.getActivo(),
-                usuario.getFotoPerfilUrl(),
-                rolResponse,
-                usuario.getCreatedAt(),
-                usuario.getUpdatedAt(),
-                usuario.getDeletedAt()
-        );
+        this.usuarioMapper = usuarioMapper;
     }
 
     /**
@@ -86,7 +58,7 @@ public class UsuarioService {
     public Page<UsuarioResponse> getAllUsuarios(int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
         return usuarioRepository.findAllActive(pageRequest)
-                .map(this::toResponse);
+                .map(usuarioMapper::toResponse);
     }
 
     /**
@@ -98,7 +70,7 @@ public class UsuarioService {
     public List<UsuarioResponse> getAllUsuarios() {
         return usuarioRepository.findAllActive()
                 .stream()
-                .map(this::toResponse)
+                .map(usuarioMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -111,7 +83,7 @@ public class UsuarioService {
     public List<UsuarioResponse> getAllDeletedUsuarios() {
         return usuarioRepository.findAllDeleted()
                 .stream()
-                .map(this::toResponse)
+                .map(usuarioMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -131,7 +103,7 @@ public class UsuarioService {
             throw new ResourceNotFoundException("Usuario", "id", id);
         }
 
-        return toResponse(usuario);
+        return usuarioMapper.toResponse(usuario);
     }
 
     /**
@@ -146,7 +118,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "username", username));
 
-        return toResponse(usuario);
+        return usuarioMapper.toResponse(usuario);
     }
 
     /**
@@ -161,7 +133,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "email", email));
 
-        return toResponse(usuario);
+        return usuarioMapper.toResponse(usuario);
     }
 
     /**
@@ -174,7 +146,7 @@ public class UsuarioService {
     public List<UsuarioResponse> getUsuariosByRol(String rolId) {
         return usuarioRepository.findByRolId(rolId)
                 .stream()
-                .map(this::toResponse)
+                .map(usuarioMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -187,7 +159,7 @@ public class UsuarioService {
     public List<UsuarioResponse> getUsuariosActivos() {
         return usuarioRepository.findByActivoTrue()
                 .stream()
-                .map(this::toResponse)
+                .map(usuarioMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -201,7 +173,7 @@ public class UsuarioService {
     public List<UsuarioResponse> searchUsuariosByUsername(String username) {
         return usuarioRepository.searchByUsername(username)
                 .stream()
-                .map(this::toResponse)
+                .map(usuarioMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -215,7 +187,7 @@ public class UsuarioService {
     public List<UsuarioResponse> searchUsuariosByNombre(String nombre) {
         return usuarioRepository.searchByNombre(nombre)
                 .stream()
-                .map(this::toResponse)
+                .map(usuarioMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -224,8 +196,9 @@ public class UsuarioService {
      *
      * @param request Datos del usuario a crear
      * @return El usuario creado
-     * @throws DuplicateResourceException si ya existe un usuario con ese username o email
-     * @throws ResourceNotFoundException si el rol no existe
+     * @throws DuplicateResourceException si ya existe un usuario con ese username o
+     *                                    email
+     * @throws ResourceNotFoundException  si el rol no existe
      */
     public UsuarioResponse createUsuario(CreateUsuarioRequest request) {
         // Validar que no exista un usuario con el mismo username
@@ -258,16 +231,16 @@ public class UsuarioService {
         usuario.setFotoPerfilUrl(request.fotoPerfilUrl());
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
-        return toResponse(savedUsuario);
+        return usuarioMapper.toResponse(savedUsuario);
     }
 
     /**
      * Actualiza un usuario existente.
      *
-     * @param id El ID del usuario a actualizar
+     * @param id      El ID del usuario a actualizar
      * @param request Datos actualizados del usuario
      * @return El usuario actualizado
-     * @throws ResourceNotFoundException si el usuario o rol no existe
+     * @throws ResourceNotFoundException  si el usuario o rol no existe
      * @throws DuplicateResourceException si el nuevo username o email ya existe
      */
     public UsuarioResponse updateUsuario(String id, UpdateUsuarioRequest request) {
@@ -332,7 +305,7 @@ public class UsuarioService {
         }
 
         Usuario updatedUsuario = usuarioRepository.save(usuario);
-        return toResponse(updatedUsuario);
+        return usuarioMapper.toResponse(updatedUsuario);
     }
 
     /**
@@ -357,7 +330,8 @@ public class UsuarioService {
      * Restaura un usuario previamente eliminado (soft delete).
      *
      * @param id El ID del usuario a restaurar
-     * @throws ResourceNotFoundException si el usuario no existe o no estaba eliminado
+     * @throws ResourceNotFoundException si el usuario no existe o no estaba
+     *                                   eliminado
      */
     public UsuarioResponse restoreUsuario(String id) {
         Usuario usuario = usuarioRepository.findById(id)
@@ -369,7 +343,7 @@ public class UsuarioService {
 
         usuario.restore();
         Usuario restoredUsuario = usuarioRepository.save(usuario);
-        return toResponse(restoredUsuario);
+        return usuarioMapper.toResponse(restoredUsuario);
     }
 
     /**

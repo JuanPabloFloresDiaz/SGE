@@ -12,10 +12,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.api.dto.request.CreateEstudianteRequest;
 import com.example.api.dto.request.UpdateEstudianteRequest;
 import com.example.api.dto.response.EstudianteResponse;
-import com.example.api.dto.response.RolResponse;
-import com.example.api.dto.response.UsuarioResponse;
 import com.example.api.exception.DuplicateResourceException;
 import com.example.api.exception.ResourceNotFoundException;
+import com.example.api.mapper.EstudianteMapper;
 import com.example.api.model.Estudiante;
 import com.example.api.model.Estudiante.Genero;
 import com.example.api.model.Usuario;
@@ -31,73 +30,21 @@ public class EstudianteService {
 
     private final EstudianteRepository estudianteRepository;
     private final UsuarioRepository usuarioRepository;
+    private final EstudianteMapper estudianteMapper;
 
     /**
      * Constructor con inyección de dependencias.
      *
      * @param estudianteRepository Repositorio de estudiantes
-     * @param usuarioRepository Repositorio de usuarios
+     * @param usuarioRepository    Repositorio de usuarios
+     * @param estudianteMapper     Mapper de estudiantes
      */
-    public EstudianteService(EstudianteRepository estudianteRepository, 
-                            UsuarioRepository usuarioRepository) {
+    public EstudianteService(EstudianteRepository estudianteRepository,
+            UsuarioRepository usuarioRepository,
+            EstudianteMapper estudianteMapper) {
         this.estudianteRepository = estudianteRepository;
         this.usuarioRepository = usuarioRepository;
-    }
-
-    /**
-     * Convierte una entidad Estudiante a EstudianteResponse.
-     *
-     * @param estudiante La entidad Estudiante
-     * @return El DTO EstudianteResponse
-     */
-    private EstudianteResponse toResponse(Estudiante estudiante) {
-        UsuarioResponse usuarioResponse = null;
-        
-        if (estudiante.getUsuario() != null) {
-            Usuario usuario = estudiante.getUsuario();
-            
-            // Construir RolResponse si existe
-            RolResponse rolResponse = null;
-            if (usuario.getRol() != null) {
-                rolResponse = new RolResponse(
-                        usuario.getRol().getId(),
-                        usuario.getRol().getNombre(),
-                        usuario.getRol().getDescripcion(),
-                        usuario.getRol().getCreatedAt(),
-                        usuario.getRol().getUpdatedAt(),
-                        usuario.getRol().getDeletedAt()
-                );
-            }
-            
-            usuarioResponse = new UsuarioResponse(
-                    usuario.getId(),
-                    usuario.getUsername(),
-                    usuario.getNombre(),
-                    usuario.getEmail(),
-                    usuario.getTelefono(),
-                    usuario.getActivo(),
-                    usuario.getFotoPerfilUrl(),
-                    rolResponse,
-                    usuario.getCreatedAt(),
-                    usuario.getUpdatedAt(),
-                    usuario.getDeletedAt()
-            );
-        }
-        
-        return new EstudianteResponse(
-                estudiante.getId(),
-                usuarioResponse,
-                estudiante.getCodigoEstudiante(),
-                estudiante.getFechaNacimiento(),
-                estudiante.getDireccion(),
-                estudiante.getGenero(),
-                estudiante.getIngreso(),
-                estudiante.getActivo(),
-                estudiante.getFotoUrl(),
-                estudiante.getCreatedAt(),
-                estudiante.getUpdatedAt(),
-                estudiante.getDeletedAt()
-        );
+        this.estudianteMapper = estudianteMapper;
     }
 
     /**
@@ -109,7 +56,7 @@ public class EstudianteService {
     @Transactional(readOnly = true)
     public Page<EstudianteResponse> getAllEstudiantes(Pageable pageable) {
         return estudianteRepository.findAllActive(pageable)
-                .map(this::toResponse);
+                .map(estudianteMapper::toResponse);
     }
 
     /**
@@ -123,8 +70,8 @@ public class EstudianteService {
     public EstudianteResponse getEstudianteById(String id) {
         Estudiante estudiante = estudianteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con ID: " + id));
-        
-        return toResponse(estudiante);
+
+        return estudianteMapper.toResponse(estudiante);
     }
 
     /**
@@ -138,8 +85,8 @@ public class EstudianteService {
     public EstudianteResponse getEstudianteByCodigo(String codigo) {
         Estudiante estudiante = estudianteRepository.findByCodigoEstudiante(codigo)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con código: " + codigo));
-        
-        return toResponse(estudiante);
+
+        return estudianteMapper.toResponse(estudiante);
     }
 
     /**
@@ -151,7 +98,7 @@ public class EstudianteService {
     @Transactional(readOnly = true)
     public List<EstudianteResponse> getEstudiantesByGenero(Genero genero) {
         return estudianteRepository.findByGenero(genero).stream()
-                .map(this::toResponse)
+                .map(estudianteMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -163,7 +110,7 @@ public class EstudianteService {
     @Transactional(readOnly = true)
     public List<EstudianteResponse> getEstudiantesActivos() {
         return estudianteRepository.findByActivoTrue().stream()
-                .map(this::toResponse)
+                .map(estudianteMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -172,17 +119,19 @@ public class EstudianteService {
      *
      * @param request Datos del estudiante a crear
      * @return El estudiante creado
-     * @throws ResourceNotFoundException si el usuario no existe
+     * @throws ResourceNotFoundException  si el usuario no existe
      * @throws DuplicateResourceException si el código ya existe
      */
     public EstudianteResponse createEstudiante(CreateEstudianteRequest request) {
         // Verificar que el usuario existe
         Usuario usuario = usuarioRepository.findById(request.usuarioId())
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + request.usuarioId()));
+                .orElseThrow(
+                        () -> new ResourceNotFoundException("Usuario no encontrado con ID: " + request.usuarioId()));
 
         // Verificar que el código no exista
         if (estudianteRepository.findByCodigoEstudiante(request.codigoEstudiante()).isPresent()) {
-            throw new DuplicateResourceException("Ya existe un estudiante con el código: " + request.codigoEstudiante());
+            throw new DuplicateResourceException(
+                    "Ya existe un estudiante con el código: " + request.codigoEstudiante());
         }
 
         // Crear estudiante
@@ -197,16 +146,16 @@ public class EstudianteService {
         estudiante.setFotoUrl(request.fotoUrl());
 
         Estudiante guardado = estudianteRepository.save(estudiante);
-        return toResponse(guardado);
+        return estudianteMapper.toResponse(guardado);
     }
 
     /**
      * Actualiza un estudiante existente.
      *
-     * @param id ID del estudiante a actualizar
+     * @param id      ID del estudiante a actualizar
      * @param request Datos a actualizar
      * @return El estudiante actualizado
-     * @throws ResourceNotFoundException si el estudiante no existe
+     * @throws ResourceNotFoundException  si el estudiante no existe
      * @throws DuplicateResourceException si el nuevo código ya existe
      */
     public EstudianteResponse updateEstudiante(String id, UpdateEstudianteRequest request) {
@@ -214,9 +163,11 @@ public class EstudianteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con ID: " + id));
 
         // Actualizar código si cambió y verificar unicidad
-        if (request.codigoEstudiante() != null && !request.codigoEstudiante().equals(estudiante.getCodigoEstudiante())) {
+        if (request.codigoEstudiante() != null
+                && !request.codigoEstudiante().equals(estudiante.getCodigoEstudiante())) {
             if (estudianteRepository.findByCodigoEstudiante(request.codigoEstudiante()).isPresent()) {
-                throw new DuplicateResourceException("Ya existe otro estudiante con el código: " + request.codigoEstudiante());
+                throw new DuplicateResourceException(
+                        "Ya existe otro estudiante con el código: " + request.codigoEstudiante());
             }
             estudiante.setCodigoEstudiante(request.codigoEstudiante());
         }
@@ -242,7 +193,7 @@ public class EstudianteService {
         }
 
         Estudiante actualizado = estudianteRepository.save(estudiante);
-        return toResponse(actualizado);
+        return estudianteMapper.toResponse(actualizado);
     }
 
     /**
