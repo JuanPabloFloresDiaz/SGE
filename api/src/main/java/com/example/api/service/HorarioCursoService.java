@@ -11,12 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.api.dto.request.CreateHorarioCursoRequest;
 import com.example.api.dto.request.UpdateHorarioCursoRequest;
-import com.example.api.dto.response.AsignaturaResponse;
-import com.example.api.dto.response.BloqueHorarioResponse;
-import com.example.api.dto.response.CursoResponse;
 import com.example.api.dto.response.HorarioCursoResponse;
-import com.example.api.dto.response.PeriodoResponse;
-import com.example.api.dto.response.ProfesorResponse;
 import com.example.api.exception.ResourceNotFoundException;
 import com.example.api.model.BloqueHorario;
 import com.example.api.model.Curso;
@@ -26,9 +21,11 @@ import com.example.api.model.HorarioCurso.TipoHorario;
 import com.example.api.repository.BloqueHorarioRepository;
 import com.example.api.repository.CursoRepository;
 import com.example.api.repository.HorarioCursoRepository;
+import com.example.api.mapper.HorarioCursoMapper;
 
 /**
- * Servicio que contiene la lógica de negocio para la gestión de horarios de curso.
+ * Servicio que contiene la lógica de negocio para la gestión de horarios de
+ * curso.
  */
 @Service
 @Transactional
@@ -37,98 +34,19 @@ public class HorarioCursoService {
     private final HorarioCursoRepository horarioCursoRepository;
     private final CursoRepository cursoRepository;
     private final BloqueHorarioRepository bloqueHorarioRepository;
+    private final HorarioCursoMapper horarioCursoMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
     public HorarioCursoService(HorarioCursoRepository horarioCursoRepository,
-                               CursoRepository cursoRepository,
-                               BloqueHorarioRepository bloqueHorarioRepository) {
+            CursoRepository cursoRepository,
+            BloqueHorarioRepository bloqueHorarioRepository,
+            HorarioCursoMapper horarioCursoMapper) {
         this.horarioCursoRepository = horarioCursoRepository;
         this.cursoRepository = cursoRepository;
         this.bloqueHorarioRepository = bloqueHorarioRepository;
-    }
-
-    /**
-     * Convierte una entidad HorarioCurso a HorarioCursoResponse.
-     */
-    private HorarioCursoResponse toResponse(HorarioCurso horario) {
-        // Construir CursoResponse con DTOs anidados
-        Curso curso = horario.getCurso();
-        
-        AsignaturaResponse asignaturaResponse = new AsignaturaResponse(
-                curso.getAsignatura().getId(),
-                curso.getAsignatura().getCodigo(),
-                curso.getAsignatura().getNombre(),
-                curso.getAsignatura().getDescripcion(),
-                curso.getAsignatura().getImagenUrl(),
-                curso.getAsignatura().getCreatedAt(),
-                curso.getAsignatura().getUpdatedAt(),
-                curso.getAsignatura().getDeletedAt()
-        );
-
-        ProfesorResponse profesorResponse = null;
-        if (curso.getProfesor() != null) {
-            profesorResponse = new ProfesorResponse(
-                    curso.getProfesor().getId(),
-                    null, // No incluimos UsuarioResponse para evitar recursión profunda
-                    curso.getProfesor().getEspecialidad(),
-                    curso.getProfesor().getContrato(),
-                    curso.getProfesor().getActivo(),
-                    curso.getProfesor().getCreatedAt(),
-                    curso.getProfesor().getUpdatedAt(),
-                    curso.getProfesor().getDeletedAt()
-            );
-        }
-
-        PeriodoResponse periodoResponse = new PeriodoResponse(
-                curso.getPeriodo().getId(),
-                curso.getPeriodo().getNombre(),
-                curso.getPeriodo().getFechaInicio(),
-                curso.getPeriodo().getFechaFin(),
-                curso.getPeriodo().getActivo(),
-                curso.getPeriodo().getCreatedAt(),
-                curso.getPeriodo().getUpdatedAt(),
-                curso.getPeriodo().getDeletedAt()
-        );
-
-        CursoResponse cursoResponse = new CursoResponse(
-                curso.getId(),
-                asignaturaResponse,
-                profesorResponse,
-                periodoResponse,
-                curso.getNombreGrupo(),
-                curso.getAulaDefault(),
-                curso.getCupo(),
-                curso.getImagenUrl(),
-                curso.getCreatedAt(),
-                curso.getUpdatedAt(),
-                curso.getDeletedAt()
-        );
-
-        // Construir BloqueHorarioResponse
-        BloqueHorario bloque = horario.getBloqueHorario();
-        BloqueHorarioResponse bloqueResponse = new BloqueHorarioResponse(
-                bloque.getId(),
-                bloque.getNombre(),
-                bloque.getInicio(),
-                bloque.getFin(),
-                bloque.getCreatedAt(),
-                bloque.getUpdatedAt(),
-                bloque.getDeletedAt()
-        );
-
-        return new HorarioCursoResponse(
-                horario.getId(),
-                cursoResponse,
-                bloqueResponse,
-                horario.getDia(),
-                horario.getAula(),
-                horario.getTipo(),
-                horario.getCreatedAt(),
-                horario.getUpdatedAt(),
-                horario.getDeletedAt()
-        );
+        this.horarioCursoMapper = horarioCursoMapper;
     }
 
     /**
@@ -137,7 +55,7 @@ public class HorarioCursoService {
     @Transactional(readOnly = true)
     public Page<HorarioCursoResponse> getAllHorarios(Pageable pageable) {
         return horarioCursoRepository.findAllActive(pageable)
-                .map(this::toResponse);
+                .map(horarioCursoMapper::toResponse);
     }
 
     /**
@@ -147,7 +65,7 @@ public class HorarioCursoService {
     public HorarioCursoResponse getHorarioById(String id) {
         HorarioCurso horario = horarioCursoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Horario de curso no encontrado con ID: " + id));
-        return toResponse(horario);
+        return horarioCursoMapper.toResponse(horario);
     }
 
     /**
@@ -157,7 +75,7 @@ public class HorarioCursoService {
     public List<HorarioCursoResponse> getHorariosByCursoId(String cursoId) {
         return horarioCursoRepository.findByCursoId(cursoId)
                 .stream()
-                .map(this::toResponse)
+                .map(horarioCursoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -168,7 +86,7 @@ public class HorarioCursoService {
     public List<HorarioCursoResponse> getHorariosByDia(DiaSemana dia) {
         return horarioCursoRepository.findByDia(dia)
                 .stream()
-                .map(this::toResponse)
+                .map(horarioCursoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -180,7 +98,7 @@ public class HorarioCursoService {
     public List<HorarioCursoResponse> getConflictos() {
         return horarioCursoRepository.findConflictos()
                 .stream()
-                .map(this::toResponse)
+                .map(horarioCursoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -191,7 +109,7 @@ public class HorarioCursoService {
     public List<HorarioCursoResponse> getHorariosDeleted() {
         return horarioCursoRepository.findAllDeleted()
                 .stream()
-                .map(this::toResponse)
+                .map(horarioCursoMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -205,7 +123,8 @@ public class HorarioCursoService {
 
         // Validar que el bloque horario existe
         BloqueHorario bloque = bloqueHorarioRepository.findById(request.bloqueId())
-                .orElseThrow(() -> new ResourceNotFoundException("Bloque de horario no encontrado con ID: " + request.bloqueId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Bloque de horario no encontrado con ID: " + request.bloqueId()));
 
         // Validar que no existe un horario duplicado (mismo curso, bloque y día)
         if (horarioCursoRepository.existsByCursoAndBloqueAndDia(request.cursoId(), request.bloqueId(), request.dia())) {
@@ -220,7 +139,7 @@ public class HorarioCursoService {
         horario.setTipo(request.tipo() != null ? request.tipo() : TipoHorario.regular);
 
         HorarioCurso savedHorario = horarioCursoRepository.save(horario);
-        return toResponse(savedHorario);
+        return horarioCursoMapper.toResponse(savedHorario);
     }
 
     /**
@@ -232,13 +151,15 @@ public class HorarioCursoService {
 
         if (request.cursoId() != null) {
             Curso curso = cursoRepository.findById(request.cursoId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado con ID: " + request.cursoId()));
+                    .orElseThrow(
+                            () -> new ResourceNotFoundException("Curso no encontrado con ID: " + request.cursoId()));
             horario.setCurso(curso);
         }
 
         if (request.bloqueId() != null) {
             BloqueHorario bloque = bloqueHorarioRepository.findById(request.bloqueId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Bloque de horario no encontrado con ID: " + request.bloqueId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Bloque de horario no encontrado con ID: " + request.bloqueId()));
             horario.setBloqueHorario(bloque);
         }
 
@@ -272,7 +193,7 @@ public class HorarioCursoService {
         }
 
         HorarioCurso updatedHorario = horarioCursoRepository.save(horario);
-        return toResponse(updatedHorario);
+        return horarioCursoMapper.toResponse(updatedHorario);
     }
 
     /**
@@ -303,6 +224,6 @@ public class HorarioCursoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Horario de curso no encontrado con ID: " + id));
         horario.setDeletedAt(null);
         HorarioCurso restoredHorario = horarioCursoRepository.save(horario);
-        return toResponse(restoredHorario);
+        return horarioCursoMapper.toResponse(restoredHorario);
     }
 }
