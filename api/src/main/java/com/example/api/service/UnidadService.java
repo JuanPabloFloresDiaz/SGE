@@ -11,18 +11,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.api.dto.request.CreateUnidadRequest;
 import com.example.api.dto.request.UpdateUnidadRequest;
-import com.example.api.dto.response.AsignaturaResponse;
-import com.example.api.dto.response.CursoResponse;
-import com.example.api.dto.response.PeriodoResponse;
-import com.example.api.dto.response.ProfesorResponse;
-import com.example.api.dto.response.RolResponse;
 import com.example.api.dto.response.UnidadResponse;
-import com.example.api.dto.response.UsuarioResponse;
 import com.example.api.exception.ResourceNotFoundException;
 import com.example.api.model.Curso;
 import com.example.api.model.Unidad;
 import com.example.api.repository.CursoRepository;
 import com.example.api.repository.UnidadRepository;
+import com.example.api.mapper.UnidadMapper;
 
 /**
  * Servicio que contiene la lógica de negocio para la gestión de unidades.
@@ -33,110 +28,17 @@ public class UnidadService {
 
     private final UnidadRepository unidadRepository;
     private final CursoRepository cursoRepository;
+    private final UnidadMapper unidadMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
     public UnidadService(UnidadRepository unidadRepository,
-                        CursoRepository cursoRepository) {
+            CursoRepository cursoRepository,
+            UnidadMapper unidadMapper) {
         this.unidadRepository = unidadRepository;
         this.cursoRepository = cursoRepository;
-    }
-
-    /**
-     * Convierte una entidad Unidad a UnidadResponse.
-     */
-    private UnidadResponse toResponse(Unidad unidad) {
-        Curso curso = unidad.getCurso();
-        
-        // Construir AsignaturaResponse
-        AsignaturaResponse asignaturaResponse = new AsignaturaResponse(
-            curso.getAsignatura().getId(),
-            curso.getAsignatura().getCodigo(),
-            curso.getAsignatura().getNombre(),
-            curso.getAsignatura().getDescripcion(),
-            curso.getAsignatura().getImagenUrl(),
-            curso.getAsignatura().getCreatedAt(),
-            curso.getAsignatura().getUpdatedAt(),
-            curso.getAsignatura().getDeletedAt()
-        );
-        
-        // Construir RolResponse del usuario del profesor
-        RolResponse rolResponse = new RolResponse(
-            curso.getProfesor().getUsuario().getRol().getId(),
-            curso.getProfesor().getUsuario().getRol().getNombre(),
-            curso.getProfesor().getUsuario().getRol().getDescripcion(),
-            curso.getProfesor().getUsuario().getRol().getCreatedAt(),
-            curso.getProfesor().getUsuario().getRol().getUpdatedAt(),
-            curso.getProfesor().getUsuario().getRol().getDeletedAt()
-        );
-        
-        // Construir UsuarioResponse del profesor
-        UsuarioResponse usuarioResponse = new UsuarioResponse(
-            curso.getProfesor().getUsuario().getId(),
-            curso.getProfesor().getUsuario().getUsername(),
-            curso.getProfesor().getUsuario().getNombre(),
-            curso.getProfesor().getUsuario().getEmail(),
-            curso.getProfesor().getUsuario().getTelefono(),
-            curso.getProfesor().getUsuario().getActivo(),
-            curso.getProfesor().getUsuario().getFotoPerfilUrl(),
-            rolResponse,
-            curso.getProfesor().getUsuario().getCreatedAt(),
-            curso.getProfesor().getUsuario().getUpdatedAt(),
-            curso.getProfesor().getUsuario().getDeletedAt()
-        );
-        
-        // Construir ProfesorResponse
-        ProfesorResponse profesorResponse = new ProfesorResponse(
-            curso.getProfesor().getId(),
-            usuarioResponse,
-            curso.getProfesor().getEspecialidad(),
-            curso.getProfesor().getContrato(),
-            curso.getProfesor().getActivo(),
-            curso.getProfesor().getCreatedAt(),
-            curso.getProfesor().getUpdatedAt(),
-            curso.getProfesor().getDeletedAt()
-        );
-        
-        // Construir PeriodoResponse
-        PeriodoResponse periodoResponse = new PeriodoResponse(
-            curso.getPeriodo().getId(),
-            curso.getPeriodo().getNombre(),
-            curso.getPeriodo().getFechaInicio(),
-            curso.getPeriodo().getFechaFin(),
-            curso.getPeriodo().getActivo(),
-            curso.getPeriodo().getCreatedAt(),
-            curso.getPeriodo().getUpdatedAt(),
-            curso.getPeriodo().getDeletedAt()
-        );
-        
-        // Construir CursoResponse
-        CursoResponse cursoResponse = new CursoResponse(
-            curso.getId(),
-            asignaturaResponse,
-            profesorResponse,
-            periodoResponse,
-            curso.getNombreGrupo(),
-            curso.getAulaDefault(),
-            curso.getCupo(),
-            curso.getImagenUrl(),
-            curso.getCreatedAt(),
-            curso.getUpdatedAt(),
-            curso.getDeletedAt()
-        );
-
-        return new UnidadResponse(
-            unidad.getId(),
-            cursoResponse,
-            unidad.getTitulo(),
-            unidad.getDescripcion(),
-            unidad.getNumero(),
-            unidad.getDocumentoUrl(),
-            unidad.getDocumentoNombre(),
-            unidad.getCreatedAt(),
-            unidad.getUpdatedAt(),
-            unidad.getDeletedAt()
-        );
+        this.unidadMapper = unidadMapper;
     }
 
     /**
@@ -145,7 +47,7 @@ public class UnidadService {
     @Transactional(readOnly = true)
     public Page<UnidadResponse> getAllUnidades(Pageable pageable) {
         return unidadRepository.findAllActive(pageable)
-                .map(this::toResponse);
+                .map(unidadMapper::toResponse);
     }
 
     /**
@@ -155,7 +57,7 @@ public class UnidadService {
     public UnidadResponse getUnidadById(String id) {
         Unidad unidad = unidadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Unidad no encontrada con ID: " + id));
-        return toResponse(unidad);
+        return unidadMapper.toResponse(unidad);
     }
 
     /**
@@ -164,7 +66,7 @@ public class UnidadService {
     @Transactional(readOnly = true)
     public List<UnidadResponse> getUnidadesByCursoId(String cursoId) {
         return unidadRepository.findByCursoId(cursoId).stream()
-                .map(this::toResponse)
+                .map(unidadMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -174,7 +76,7 @@ public class UnidadService {
     @Transactional(readOnly = true)
     public List<UnidadResponse> getUnidadesDeleted() {
         return unidadRepository.findAllDeleted().stream()
-                .map(this::toResponse)
+                .map(unidadMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -195,7 +97,7 @@ public class UnidadService {
         unidad.setDocumentoNombre(request.documentoNombre());
 
         Unidad savedUnidad = unidadRepository.save(unidad);
-        return toResponse(savedUnidad);
+        return unidadMapper.toResponse(savedUnidad);
     }
 
     /**
@@ -222,7 +124,7 @@ public class UnidadService {
         }
 
         Unidad updatedUnidad = unidadRepository.save(unidad);
-        return toResponse(updatedUnidad);
+        return unidadMapper.toResponse(updatedUnidad);
     }
 
     /**
@@ -252,6 +154,6 @@ public class UnidadService {
                 .orElseThrow(() -> new ResourceNotFoundException("Unidad no encontrada con ID: " + id));
         unidad.setDeletedAt(null);
         Unidad restoredUnidad = unidadRepository.save(unidad);
-        return toResponse(restoredUnidad);
+        return unidadMapper.toResponse(restoredUnidad);
     }
 }
