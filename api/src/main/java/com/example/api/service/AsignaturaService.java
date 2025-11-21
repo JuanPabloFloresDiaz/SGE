@@ -13,6 +13,7 @@ import com.example.api.dto.request.CreateAsignaturaRequest;
 import com.example.api.dto.request.UpdateAsignaturaRequest;
 import com.example.api.dto.response.AsignaturaResponse;
 import com.example.api.exception.ResourceNotFoundException;
+import com.example.api.mapper.AsignaturaMapper;
 import com.example.api.model.Asignatura;
 import com.example.api.repository.AsignaturaRepository;
 
@@ -24,33 +25,17 @@ import com.example.api.repository.AsignaturaRepository;
 public class AsignaturaService {
 
     private final AsignaturaRepository asignaturaRepository;
+    private final AsignaturaMapper asignaturaMapper;
 
     /**
      * Constructor con inyección de dependencias.
      *
      * @param asignaturaRepository Repositorio de asignaturas
+     * @param asignaturaMapper     Mapper de asignaturas
      */
-    public AsignaturaService(AsignaturaRepository asignaturaRepository) {
+    public AsignaturaService(AsignaturaRepository asignaturaRepository, AsignaturaMapper asignaturaMapper) {
         this.asignaturaRepository = asignaturaRepository;
-    }
-
-    /**
-     * Convierte una entidad Asignatura a AsignaturaResponse.
-     *
-     * @param asignatura La entidad Asignatura
-     * @return El DTO AsignaturaResponse
-     */
-    private AsignaturaResponse toResponse(Asignatura asignatura) {
-        return new AsignaturaResponse(
-                asignatura.getId(),
-                asignatura.getCodigo(),
-                asignatura.getNombre(),
-                asignatura.getDescripcion(),
-                asignatura.getImagenUrl(),
-                asignatura.getCreatedAt(),
-                asignatura.getUpdatedAt(),
-                asignatura.getDeletedAt()
-        );
+        this.asignaturaMapper = asignaturaMapper;
     }
 
     /**
@@ -62,7 +47,7 @@ public class AsignaturaService {
     @Transactional(readOnly = true)
     public Page<AsignaturaResponse> getAllAsignaturas(Pageable pageable) {
         return asignaturaRepository.findAllActive(pageable)
-                .map(this::toResponse);
+                .map(asignaturaMapper::toResponse);
     }
 
     /**
@@ -76,7 +61,7 @@ public class AsignaturaService {
     public AsignaturaResponse getAsignaturaById(String id) {
         Asignatura asignatura = asignaturaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Asignatura no encontrada con ID: " + id));
-        return toResponse(asignatura);
+        return asignaturaMapper.toResponse(asignatura);
     }
 
     /**
@@ -90,7 +75,7 @@ public class AsignaturaService {
     public AsignaturaResponse getAsignaturaByCodigo(String codigo) {
         Asignatura asignatura = asignaturaRepository.findByCodigo(codigo)
                 .orElseThrow(() -> new ResourceNotFoundException("Asignatura no encontrada con código: " + codigo));
-        return toResponse(asignatura);
+        return asignaturaMapper.toResponse(asignatura);
     }
 
     /**
@@ -103,7 +88,7 @@ public class AsignaturaService {
     public List<AsignaturaResponse> searchByNombre(String nombre) {
         return asignaturaRepository.searchByNombre(nombre)
                 .stream()
-                .map(this::toResponse)
+                .map(asignaturaMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -116,7 +101,7 @@ public class AsignaturaService {
     public List<AsignaturaResponse> getAsignaturasDeleted() {
         return asignaturaRepository.findAllDeleted()
                 .stream()
-                .map(this::toResponse)
+                .map(asignaturaMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -142,17 +127,17 @@ public class AsignaturaService {
 
         // Guardar
         Asignatura asignaturaGuardada = asignaturaRepository.save(asignatura);
-        return toResponse(asignaturaGuardada);
+        return asignaturaMapper.toResponse(asignaturaGuardada);
     }
 
     /**
      * Actualiza una asignatura existente.
      *
-     * @param id El ID de la asignatura a actualizar
+     * @param id      El ID de la asignatura a actualizar
      * @param request Datos a actualizar
      * @return La asignatura actualizada
      * @throws ResourceNotFoundException si la asignatura no existe
-     * @throws IllegalArgumentException si el código ya existe
+     * @throws IllegalArgumentException  si el código ya existe
      */
     public AsignaturaResponse updateAsignatura(String id, UpdateAsignaturaRequest request) {
         Asignatura asignatura = asignaturaRepository.findById(id)
@@ -177,7 +162,7 @@ public class AsignaturaService {
         }
 
         Asignatura asignaturaActualizada = asignaturaRepository.save(asignatura);
-        return toResponse(asignaturaActualizada);
+        return asignaturaMapper.toResponse(asignaturaActualizada);
     }
 
     /**
@@ -220,6 +205,6 @@ public class AsignaturaService {
 
         asignatura.setDeletedAt(null);
         Asignatura asignaturaRestaurada = asignaturaRepository.save(asignatura);
-        return toResponse(asignaturaRestaurada);
+        return asignaturaMapper.toResponse(asignaturaRestaurada);
     }
 }
