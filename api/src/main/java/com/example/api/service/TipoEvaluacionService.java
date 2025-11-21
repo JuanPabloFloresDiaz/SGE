@@ -15,36 +15,26 @@ import com.example.api.dto.response.TipoEvaluacionResponse;
 import com.example.api.exception.ResourceNotFoundException;
 import com.example.api.model.TipoEvaluacion;
 import com.example.api.repository.TipoEvaluacionRepository;
+import com.example.api.mapper.TipoEvaluacionMapper;
 
 /**
- * Servicio que contiene la lógica de negocio para la gestión de tipos de evaluación.
+ * Servicio que contiene la lógica de negocio para la gestión de tipos de
+ * evaluación.
  */
 @Service
 @Transactional
 public class TipoEvaluacionService {
 
     private final TipoEvaluacionRepository tipoEvaluacionRepository;
+    private final TipoEvaluacionMapper tipoEvaluacionMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
-    public TipoEvaluacionService(TipoEvaluacionRepository tipoEvaluacionRepository) {
+    public TipoEvaluacionService(TipoEvaluacionRepository tipoEvaluacionRepository,
+            TipoEvaluacionMapper tipoEvaluacionMapper) {
         this.tipoEvaluacionRepository = tipoEvaluacionRepository;
-    }
-
-    /**
-     * Convierte una entidad TipoEvaluacion a TipoEvaluacionResponse.
-     */
-    private TipoEvaluacionResponse toResponse(TipoEvaluacion tipoEvaluacion) {
-        return new TipoEvaluacionResponse(
-                tipoEvaluacion.getId(),
-                tipoEvaluacion.getNombre(),
-                tipoEvaluacion.getDescripcion(),
-                tipoEvaluacion.getPeso(),
-                tipoEvaluacion.getCreatedAt(),
-                tipoEvaluacion.getUpdatedAt(),
-                tipoEvaluacion.getDeletedAt()
-        );
+        this.tipoEvaluacionMapper = tipoEvaluacionMapper;
     }
 
     /**
@@ -53,7 +43,7 @@ public class TipoEvaluacionService {
     @Transactional(readOnly = true)
     public Page<TipoEvaluacionResponse> getAllTiposEvaluacion(Pageable pageable) {
         return tipoEvaluacionRepository.findAllActive(pageable)
-                .map(this::toResponse);
+                .map(tipoEvaluacionMapper::toResponse);
     }
 
     /**
@@ -63,7 +53,7 @@ public class TipoEvaluacionService {
     public TipoEvaluacionResponse getTipoEvaluacionById(String id) {
         TipoEvaluacion tipoEvaluacion = tipoEvaluacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de evaluación no encontrado con ID: " + id));
-        return toResponse(tipoEvaluacion);
+        return tipoEvaluacionMapper.toResponse(tipoEvaluacion);
     }
 
     /**
@@ -74,16 +64,16 @@ public class TipoEvaluacionService {
     public TipoEvaluacionResponse searchByNombre(String nombre) {
         // Obtener todos los tipos activos (lista pequeña, ~5-10 elementos)
         List<TipoEvaluacion> tiposActivos = tipoEvaluacionRepository.findAllActive();
-        
+
         // Búsqueda secuencial (lineal)
         // Complejidad: O(n) donde n es el número de tipos (~5-10)
         // Apropiado para listas pequeñas donde no se justifica optimización
         for (TipoEvaluacion tipo : tiposActivos) {
             if (tipo.getNombre().equalsIgnoreCase(nombre)) {
-                return toResponse(tipo);
+                return tipoEvaluacionMapper.toResponse(tipo);
             }
         }
-        
+
         throw new ResourceNotFoundException("Tipo de evaluación no encontrado con nombre: " + nombre);
     }
 
@@ -93,7 +83,7 @@ public class TipoEvaluacionService {
     @Transactional(readOnly = true)
     public List<TipoEvaluacionResponse> getTiposEvaluacionDeleted() {
         return tipoEvaluacionRepository.findAllDeleted().stream()
-                .map(this::toResponse)
+                .map(tipoEvaluacionMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -107,7 +97,7 @@ public class TipoEvaluacionService {
         tipoEvaluacion.setPeso(request.peso() != null ? request.peso() : java.math.BigDecimal.ZERO);
 
         TipoEvaluacion saved = tipoEvaluacionRepository.save(tipoEvaluacion);
-        return toResponse(saved);
+        return tipoEvaluacionMapper.toResponse(saved);
     }
 
     /**
@@ -128,7 +118,7 @@ public class TipoEvaluacionService {
         }
 
         TipoEvaluacion updated = tipoEvaluacionRepository.save(tipoEvaluacion);
-        return toResponse(updated);
+        return tipoEvaluacionMapper.toResponse(updated);
     }
 
     /**
@@ -158,6 +148,6 @@ public class TipoEvaluacionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de evaluación no encontrado con ID: " + id));
         tipoEvaluacion.setDeletedAt(null);
         TipoEvaluacion restored = tipoEvaluacionRepository.save(tipoEvaluacion);
-        return toResponse(restored);
+        return tipoEvaluacionMapper.toResponse(restored);
     }
 }
