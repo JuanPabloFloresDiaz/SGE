@@ -12,9 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.api.dto.request.CreateProfesorRequest;
 import com.example.api.dto.request.UpdateProfesorRequest;
 import com.example.api.dto.response.ProfesorResponse;
-import com.example.api.dto.response.RolResponse;
-import com.example.api.dto.response.UsuarioResponse;
 import com.example.api.exception.ResourceNotFoundException;
+import com.example.api.mapper.ProfesorMapper;
 import com.example.api.model.Profesor;
 import com.example.api.model.Profesor.TipoContrato;
 import com.example.api.model.Usuario;
@@ -30,64 +29,21 @@ public class ProfesorService {
 
     private final ProfesorRepository profesorRepository;
     private final UsuarioRepository usuarioRepository;
+    private final ProfesorMapper profesorMapper;
 
     /**
      * Constructor con inyección de dependencias.
      *
      * @param profesorRepository Repositorio de profesores
-     * @param usuarioRepository Repositorio de usuarios
+     * @param usuarioRepository  Repositorio de usuarios
+     * @param profesorMapper     Mapper de profesores
      */
-    public ProfesorService(ProfesorRepository profesorRepository, 
-                          UsuarioRepository usuarioRepository) {
+    public ProfesorService(ProfesorRepository profesorRepository,
+            UsuarioRepository usuarioRepository,
+            ProfesorMapper profesorMapper) {
         this.profesorRepository = profesorRepository;
         this.usuarioRepository = usuarioRepository;
-    }
-
-    /**
-     * Convierte una entidad Profesor a ProfesorResponse.
-     *
-     * @param profesor La entidad Profesor
-     * @return El DTO ProfesorResponse
-     */
-    private ProfesorResponse toResponse(Profesor profesor) {
-        UsuarioResponse usuarioResponse = null;
-        
-        if (profesor.getUsuario() != null) {
-            Usuario usuario = profesor.getUsuario();
-            RolResponse rolResponse = new RolResponse(
-                    usuario.getRol().getId(),
-                    usuario.getRol().getNombre(),
-                    usuario.getRol().getDescripcion(),
-                    usuario.getRol().getCreatedAt(),
-                    usuario.getRol().getUpdatedAt(),
-                    usuario.getRol().getDeletedAt()
-            );
-
-            usuarioResponse = new UsuarioResponse(
-                    usuario.getId(),
-                    usuario.getUsername(),
-                    usuario.getNombre(),
-                    usuario.getEmail(),
-                    usuario.getTelefono(),
-                    usuario.getActivo(),
-                    usuario.getFotoPerfilUrl(),
-                    rolResponse,
-                    usuario.getCreatedAt(),
-                    usuario.getUpdatedAt(),
-                    usuario.getDeletedAt()
-            );
-        }
-
-        return new ProfesorResponse(
-                profesor.getId(),
-                usuarioResponse,
-                profesor.getEspecialidad(),
-                profesor.getContrato(),
-                profesor.getActivo(),
-                profesor.getCreatedAt(),
-                profesor.getUpdatedAt(),
-                profesor.getDeletedAt()
-        );
+        this.profesorMapper = profesorMapper;
     }
 
     /**
@@ -99,7 +55,7 @@ public class ProfesorService {
     @Transactional(readOnly = true)
     public Page<ProfesorResponse> getAllProfesores(Pageable pageable) {
         return profesorRepository.findAllActive(pageable)
-                .map(this::toResponse);
+                .map(profesorMapper::toResponse);
     }
 
     /**
@@ -113,7 +69,7 @@ public class ProfesorService {
     public ProfesorResponse getProfesorById(String id) {
         Profesor profesor = profesorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Profesor no encontrado con ID: " + id));
-        return toResponse(profesor);
+        return profesorMapper.toResponse(profesor);
     }
 
     /**
@@ -126,7 +82,7 @@ public class ProfesorService {
     public List<ProfesorResponse> searchByEspecialidad(String especialidad) {
         return profesorRepository.searchByEspecialidad(especialidad)
                 .stream()
-                .map(this::toResponse)
+                .map(profesorMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -139,7 +95,7 @@ public class ProfesorService {
     public List<ProfesorResponse> getProfesoresActivos() {
         return profesorRepository.findByActivoTrue()
                 .stream()
-                .map(this::toResponse)
+                .map(profesorMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -152,7 +108,7 @@ public class ProfesorService {
     public List<ProfesorResponse> getProfesoresDeleted() {
         return profesorRepository.findAllDeleted()
                 .stream()
-                .map(this::toResponse)
+                .map(profesorMapper::toResponse)
                 .collect(Collectors.toList());
     }
 
@@ -173,20 +129,20 @@ public class ProfesorService {
         Profesor profesor = new Profesor();
         profesor.setUsuario(usuario);
         profesor.setEspecialidad(request.especialidad());
-        
+
         // Establecer valores por defecto
         profesor.setContrato(request.contrato() != null ? request.contrato() : TipoContrato.eventual);
         profesor.setActivo(request.activo() != null ? request.activo() : true);
 
         // Guardar
         Profesor profesorGuardado = profesorRepository.save(profesor);
-        return toResponse(profesorGuardado);
+        return profesorMapper.toResponse(profesorGuardado);
     }
 
     /**
      * Actualiza un profesor existente.
      *
-     * @param id El ID del profesor a actualizar
+     * @param id      El ID del profesor a actualizar
      * @param request Datos a actualizar
      * @return El profesor actualizado
      * @throws ResourceNotFoundException si el profesor no existe
@@ -207,7 +163,7 @@ public class ProfesorService {
         }
 
         Profesor profesorActualizado = profesorRepository.save(profesor);
-        return toResponse(profesorActualizado);
+        return profesorMapper.toResponse(profesorActualizado);
     }
 
     /**
@@ -252,6 +208,6 @@ public class ProfesorService {
         profesor.setDeletedAt(null);
         profesor.setActivo(true);
         Profesor profesorRestaurado = profesorRepository.save(profesor);
-        return toResponse(profesorRestaurado);
+        return profesorMapper.toResponse(profesorRestaurado);
     }
 }
