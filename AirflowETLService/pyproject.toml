@@ -1,0 +1,10 @@
+[project]
+name = "airflow-etl-pipeline"
+version = "0.1.0"
+description = "Minimal viable example for Airflow ETL pipeline with Docker"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=2.1.3",
+    "numpy>=1.26.2",
+]
