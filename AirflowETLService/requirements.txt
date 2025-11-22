@@ -1,4 +1,4 @@
-apache-airflow>=2.7.0
+apache-airflow[celery,s3,postgres]
 apache-airflow-providers-postgres
 psycopg2-binary
 pandas>=2.1.3

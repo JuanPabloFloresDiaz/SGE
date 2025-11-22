@@ -11,3 +11,4 @@ logs/
 .env
 venv
 __pycache__
+airflow.cfg

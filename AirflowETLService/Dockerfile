@@ -17,3 +17,9 @@ COPY requirements.txt .
 
 # Install python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Esto DEBE hacerse en el Dockerfile si Airflow lo requiere
+RUN chown -R 1000:0 /opt/airflow 
+
+# Establecer el usuario de Airflow
+USER 1000
