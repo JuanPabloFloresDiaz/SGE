@@ -88,13 +88,8 @@ public class UnidadService {
         Curso curso = cursoRepository.findById(request.cursoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado con ID: " + request.cursoId()));
 
-        Unidad unidad = new Unidad();
+        Unidad unidad = unidadMapper.toEntity(request);
         unidad.setCurso(curso);
-        unidad.setTitulo(request.titulo());
-        unidad.setDescripcion(request.descripcion());
-        unidad.setNumero(request.numero());
-        unidad.setDocumentoUrl(request.documentoUrl());
-        unidad.setDocumentoNombre(request.documentoNombre());
 
         Unidad savedUnidad = unidadRepository.save(unidad);
         return unidadMapper.toResponse(savedUnidad);
@@ -107,21 +102,7 @@ public class UnidadService {
         Unidad unidad = unidadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Unidad no encontrada con ID: " + id));
 
-        if (request.titulo() != null) {
-            unidad.setTitulo(request.titulo());
-        }
-        if (request.descripcion() != null) {
-            unidad.setDescripcion(request.descripcion());
-        }
-        if (request.numero() != null) {
-            unidad.setNumero(request.numero());
-        }
-        if (request.documentoUrl() != null) {
-            unidad.setDocumentoUrl(request.documentoUrl());
-        }
-        if (request.documentoNombre() != null) {
-            unidad.setDocumentoNombre(request.documentoNombre());
-        }
+        unidadMapper.updateEntityFromDto(request, unidad);
 
         Unidad updatedUnidad = unidadRepository.save(unidad);
         return unidadMapper.toResponse(updatedUnidad);
