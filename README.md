@@ -8,30 +8,27 @@ El proyecto se compone de los siguientes módulos:
 
 ### 1. @[api] (Backend Principal)
 El núcleo del sistema desarrollado en **Spring Boot**. Maneja la lógica de negocio, gestión de usuarios, cursos y calificaciones.
-- **Tecnologías**: Java 17, Spring Boot 3.2, Spring Data JPA, Flyway.
+- **Tecnologías**: Java 17, Spring Boot 3.2, Spring Data JPA, Flyway, **AWS SDK v2 (S3)**.
+- **Almacenamiento**: Integrado nativamente con **MinIO** para la gestión de archivos.
 - **Documentación**: Para detalles de ejecución y endpoints, consulta el [README interno](./api/README.md).
 
 ### 2. @[AirflowETLService] (Orquestación de Datos)
 Servicio encargado de los procesos ETL (Extracción, Transformación y Carga).
 - **Función**: Automatiza flujos de trabajo como la promoción estudiantil o reportes masivos.
+- **Estado**: Actualmente los scripts ETL operan localmente, pero están diseñados para integrarse con MinIO en el futuro.
 - **Componentes**:
   - **Webserver**: Interfaz gráfica para monitorear DAGs (Puerto 8089).
   - **Scheduler**: Planifica la ejecución de tareas.
   - **Worker**: Ejecuta las tareas utilizando Celery.
   - **Triggerer**: Maneja eventos asíncronos.
 
-### 3. @[BucketS3Service] (Almacenamiento de Objetos)
-Simulación de un servicio S3 compatible con AWS, utilizando **MinIO**.
-- **Función**: Almacena archivos estáticos, documentos de estudiantes y recursos multimedia.
-- **Acceso**: Consola web disponible en el puerto 9001.
-
-### 4. @[RedisService] (Caché y Broker)
+### 3. @[RedisService] (Caché y Broker)
 Servicio de base de datos en memoria.
 - **Función**:
   - Actúa como **Message Broker** para Celery (comunicación entre Airflow Scheduler y Workers).
   - Caché para la API (si se implementa).
 
-### 5. @[PostgresService] (Base de Datos de Airflow)
+### 4. @[PostgresService] (Base de Datos de Airflow)
 Base de datos dedicada para los metadatos de Airflow.
 - **Función**: Almacena el estado de los DAGs, usuarios de Airflow y configuraciones.
 - **Puerto**: Expuesto en 5446 (interno 5432) para evitar conflictos con la DB de la API.
