@@ -1,24 +1,35 @@
 package com.example.api.service;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.InputStream;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import software.amazon.awssdk.core.sync.RequestBody;
+import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.HeadObjectRequest;
+import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
+import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+
 /**
- * Servicio para manejar el almacenamiento de archivos en el sistema de archivos local.
- * Los archivos se organizan en carpetas por tipo de recurso.
+ * Servicio para manejar el almacenamiento de archivos en MinIO (S3).
+ * Los archivos se organizan en "carpetas" (prefijos) por tipo de recurso.
  */
 @Service
 public class StorageService {
 
-    @Value("${file.upload-dir:uploads}")
-    private String uploadDir;
+    private final S3Client s3Client;
+
+    @Value("${minio.bucket-name}")
+    private String bucketName;
+
+    public StorageService(S3Client s3Client) {
+        this.s3Client = s3Client;
+    }
 
     /**
      * Enum para definir los tipos de carpetas donde se guardarán los archivos.
@@ -49,44 +60,13 @@ public class StorageService {
     }
 
     /**
-     * Inicializa el directorio base de uploads si no existe.
-     */
-    private void initStorage() {
-        try {
-            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
-            Files.createDirectories(uploadPath);
-        } catch (IOException ex) {
-            throw new RuntimeException("No se pudo crear el directorio de almacenamiento: " + uploadDir, ex);
-        }
-    }
-
-    /**
-     * Inicializa un subdirectorio específico para una categoría.
-     */
-    private Path initCategoryFolder(FileCategory category) {
-        try {
-            Path categoryPath = Paths.get(uploadDir, category.getFolderName())
-                    .toAbsolutePath()
-                    .normalize();
-            Files.createDirectories(categoryPath);
-            return categoryPath;
-        } catch (IOException ex) {
-            throw new RuntimeException(
-                    "No se pudo crear el directorio de categoría: " + category.getFolderName(), ex);
-        }
-    }
-
-    /**
-     * Almacena un archivo en la categoría especificada.
+     * Almacena un archivo en la categoría especificada en MinIO.
      * 
      * @param file     El archivo a almacenar
-     * @param category La categoría donde se guardará (define la carpeta)
+     * @param category La categoría donde se guardará (define el prefijo)
      * @return El path relativo del archivo guardado (ej: "actividades/uuid.jpg")
      */
     public String storeFile(MultipartFile file, FileCategory category) {
-        // Inicializar storage base
-        initStorage();
-
         // Validar archivo
         if (file.isEmpty()) {
             throw new RuntimeException("El archivo está vacío");
@@ -107,29 +87,35 @@ public class StorageService {
         // Generar nombre único
         String uniqueFileName = UUID.randomUUID().toString() + extension;
 
-        // Obtener/crear carpeta de categoría
-        Path categoryFolder = initCategoryFolder(category);
+        // Construir la clave del objeto (key)
+        String objectKey = category.getFolderName() + "/" + uniqueFileName;
 
         try {
-            // Ruta completa donde se guardará
-            Path targetLocation = categoryFolder.resolve(uniqueFileName);
+            PutObjectRequest putOb = PutObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(objectKey)
+                    .contentType(file.getContentType())
+                    .build();
 
-            // Copiar archivo al disco
-            Files.copy(file.getInputStream(), targetLocation);
+            s3Client.putObject(putOb, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
-            // Retornar path relativo (lo que se guarda en DB)
-            return category.getFolderName() + "/" + uniqueFileName;
+            return objectKey;
 
         } catch (IOException ex) {
-            throw new RuntimeException("Error al almacenar el archivo: " + uniqueFileName, ex);
+            throw new RuntimeException("Error al leer el archivo para subirlo", ex);
+        } catch (Exception ex) {
+            throw new RuntimeException("Error al subir el archivo a MinIO: " + objectKey, ex);
         }
     }
 
     /**
-     * Elimina un archivo del sistema de archivos.
+     * Elimina un archivo de MinIO.
      * 
      * @param relativePath El path relativo del archivo (ej: "actividades/uuid.jpg")
-     * @return true si se eliminó exitosamente
+     * @return true si se eliminó exitosamente (o si no existía, S3 es idempotente
+     *         en deletes,
+     *         pero intentaremos verificar antes si queremos ser estrictos, aunque
+     *         usualmente delete siempre retorna éxito si no hay error de red)
      */
     public boolean deleteFile(String relativePath) {
         if (relativePath == null || relativePath.isEmpty()) {
@@ -137,42 +123,47 @@ public class StorageService {
         }
 
         try {
-            Path filePath = Paths.get(uploadDir, relativePath)
-                    .toAbsolutePath()
-                    .normalize();
-
-            // Verificar que el archivo existe
-            if (!Files.exists(filePath)) {
+            // Verificar si existe primero para retornar false si no existe (opcional, pero
+            // mantiene comportamiento anterior)
+            if (!fileExists(relativePath)) {
                 return false;
             }
 
-            // Eliminar archivo
-            Files.delete(filePath);
+            DeleteObjectRequest deleteOb = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(relativePath)
+                    .build();
+
+            s3Client.deleteObject(deleteOb);
             return true;
 
-        } catch (IOException ex) {
-            throw new RuntimeException("Error al eliminar el archivo: " + relativePath, ex);
+        } catch (Exception ex) {
+            throw new RuntimeException("Error al eliminar el archivo de MinIO: " + relativePath, ex);
         }
     }
 
     /**
-     * Carga un archivo como recurso (útil para lectura interna).
+     * Carga un archivo como recurso (InputStream).
      * 
      * @param relativePath El path relativo del archivo
-     * @return El Path absoluto del archivo
+     * @return InputStream del archivo
      */
-    public Path loadFileAsResource(String relativePath) {
+    public InputStream loadFileAsResource(String relativePath) {
         if (relativePath == null || relativePath.isEmpty()) {
             throw new RuntimeException("El path del archivo es inválido");
         }
 
-        return Paths.get(uploadDir, relativePath)
-                .toAbsolutePath()
-                .normalize();
+        try {
+            return s3Client.getObject(builder -> builder.bucket(bucketName).key(relativePath));
+        } catch (NoSuchKeyException ex) {
+            throw new RuntimeException("El archivo no existe: " + relativePath, ex);
+        } catch (Exception ex) {
+            throw new RuntimeException("Error al descargar el archivo de MinIO: " + relativePath, ex);
+        }
     }
 
     /**
-     * Verifica si un archivo existe.
+     * Verifica si un archivo existe en MinIO.
      * 
      * @param relativePath El path relativo del archivo
      * @return true si el archivo existe
@@ -182,10 +173,19 @@ public class StorageService {
             return false;
         }
 
-        Path filePath = Paths.get(uploadDir, relativePath)
-                .toAbsolutePath()
-                .normalize();
+        try {
+            HeadObjectRequest headOb = HeadObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(relativePath)
+                    .build();
 
-        return Files.exists(filePath);
+            s3Client.headObject(headOb);
+            return true;
+        } catch (NoSuchKeyException ex) {
+            return false;
+        } catch (Exception ex) {
+            // Si hay otro error (ej: permisos), asumimos que no se puede acceder
+            return false;
+        }
     }
 }
