@@ -107,10 +107,7 @@ public class BloqueHorarioService {
             throw new IllegalArgumentException("La hora de fin debe ser posterior a la hora de inicio");
         }
 
-        BloqueHorario bloque = new BloqueHorario();
-        bloque.setNombre(request.nombre());
-        bloque.setInicio(request.inicio());
-        bloque.setFin(request.fin());
+        BloqueHorario bloque = bloqueHorarioMapper.toEntity(request);
 
         BloqueHorario savedBloque = bloqueHorarioRepository.save(bloque);
         return bloqueHorarioMapper.toResponse(savedBloque);
@@ -130,15 +127,7 @@ public class BloqueHorarioService {
         BloqueHorario bloque = bloqueHorarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bloque de horario no encontrado con ID: " + id));
 
-        if (request.nombre() != null) {
-            bloque.setNombre(request.nombre());
-        }
-        if (request.inicio() != null) {
-            bloque.setInicio(request.inicio());
-        }
-        if (request.fin() != null) {
-            bloque.setFin(request.fin());
-        }
+        bloqueHorarioMapper.updateEntityFromDto(request, bloque);
 
         // Validar que la hora de fin sea posterior a la hora de inicio
         if (bloque.getFin().isBefore(bloque.getInicio()) || bloque.getFin().equals(bloque.getInicio())) {

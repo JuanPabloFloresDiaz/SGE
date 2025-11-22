@@ -15,7 +15,7 @@ import com.example.api.dto.response.ProfesorResponse;
 import com.example.api.exception.ResourceNotFoundException;
 import com.example.api.mapper.ProfesorMapper;
 import com.example.api.model.Profesor;
-import com.example.api.model.Profesor.TipoContrato;
+
 import com.example.api.model.Usuario;
 import com.example.api.repository.ProfesorRepository;
 import com.example.api.repository.UsuarioRepository;
@@ -126,13 +126,8 @@ public class ProfesorService {
                         "Usuario no encontrado con ID: " + request.usuarioId()));
 
         // Crear nuevo profesor
-        Profesor profesor = new Profesor();
+        Profesor profesor = profesorMapper.toEntity(request);
         profesor.setUsuario(usuario);
-        profesor.setEspecialidad(request.especialidad());
-
-        // Establecer valores por defecto
-        profesor.setContrato(request.contrato() != null ? request.contrato() : TipoContrato.eventual);
-        profesor.setActivo(request.activo() != null ? request.activo() : true);
 
         // Guardar
         Profesor profesorGuardado = profesorRepository.save(profesor);
@@ -152,15 +147,7 @@ public class ProfesorService {
                 .orElseThrow(() -> new ResourceNotFoundException("Profesor no encontrado con ID: " + id));
 
         // Actualizar solo los campos proporcionados
-        if (request.especialidad() != null) {
-            profesor.setEspecialidad(request.especialidad());
-        }
-        if (request.contrato() != null) {
-            profesor.setContrato(request.contrato());
-        }
-        if (request.activo() != null) {
-            profesor.setActivo(request.activo());
-        }
+        profesorMapper.updateEntityFromDto(request, profesor);
 
         Profesor profesorActualizado = profesorRepository.save(profesor);
         return profesorMapper.toResponse(profesorActualizado);

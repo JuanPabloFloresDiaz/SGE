@@ -131,12 +131,12 @@ public class HorarioCursoService {
             throw new IllegalArgumentException("Ya existe un horario para este curso en el mismo bloque y día");
         }
 
-        HorarioCurso horario = new HorarioCurso();
+        HorarioCurso horario = horarioCursoMapper.toEntity(request);
         horario.setCurso(curso);
         horario.setBloqueHorario(bloque);
-        horario.setDia(request.dia());
-        horario.setAula(request.aula());
-        horario.setTipo(request.tipo() != null ? request.tipo() : TipoHorario.regular);
+        if (horario.getTipo() == null) {
+            horario.setTipo(TipoHorario.regular);
+        }
 
         HorarioCurso savedHorario = horarioCursoRepository.save(horario);
         return horarioCursoMapper.toResponse(savedHorario);
@@ -148,6 +148,8 @@ public class HorarioCursoService {
     public HorarioCursoResponse updateHorario(String id, UpdateHorarioCursoRequest request) {
         HorarioCurso horario = horarioCursoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Horario de curso no encontrado con ID: " + id));
+
+        horarioCursoMapper.updateEntityFromDto(request, horario);
 
         if (request.cursoId() != null) {
             Curso curso = cursoRepository.findById(request.cursoId())
@@ -161,18 +163,6 @@ public class HorarioCursoService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Bloque de horario no encontrado con ID: " + request.bloqueId()));
             horario.setBloqueHorario(bloque);
-        }
-
-        if (request.dia() != null) {
-            horario.setDia(request.dia());
-        }
-
-        if (request.aula() != null) {
-            horario.setAula(request.aula());
-        }
-
-        if (request.tipo() != null) {
-            horario.setTipo(request.tipo());
         }
 
         // Validar que no se crea un duplicado al actualizar

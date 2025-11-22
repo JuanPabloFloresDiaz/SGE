@@ -133,11 +133,7 @@ public class PeriodoService {
         }
 
         // Crear nuevo periodo
-        Periodo periodo = new Periodo();
-        periodo.setNombre(request.nombre());
-        periodo.setFechaInicio(request.fechaInicio());
-        periodo.setFechaFin(request.fechaFin());
-        periodo.setActivo(request.activo() != null ? request.activo() : true);
+        Periodo periodo = periodoMapper.toEntity(request);
 
         // Guardar
         Periodo periodoGuardado = periodoRepository.save(periodo);
@@ -162,17 +158,9 @@ public class PeriodoService {
             if (periodoRepository.existsByNombreAndIdNot(request.nombre(), id)) {
                 throw new IllegalArgumentException("Ya existe un periodo con el nombre: " + request.nombre());
             }
-            periodo.setNombre(request.nombre());
         }
-        if (request.fechaInicio() != null) {
-            periodo.setFechaInicio(request.fechaInicio());
-        }
-        if (request.fechaFin() != null) {
-            periodo.setFechaFin(request.fechaFin());
-        }
-        if (request.activo() != null) {
-            periodo.setActivo(request.activo());
-        }
+
+        periodoMapper.updateEntityFromDto(request, periodo);
 
         // Validar que fechaFin sea posterior a fechaInicio (si ambas están definidas)
         if (periodo.getFechaInicio() != null && periodo.getFechaFin() != null) {

@@ -188,14 +188,10 @@ public class CursoService {
         }
 
         // Crear nuevo curso
-        Curso curso = new Curso();
+        Curso curso = cursoMapper.toEntity(request);
         curso.setAsignatura(asignatura);
-        curso.setProfesor(profesor);
         curso.setPeriodo(periodo);
-        curso.setNombreGrupo(request.nombreGrupo());
-        curso.setAulaDefault(request.aulaDefault());
-        curso.setCupo(request.cupo());
-        curso.setImagenUrl(request.imagenUrl());
+        curso.setProfesor(profesor);
 
         // Guardar
         Curso cursoGuardado = cursoRepository.save(curso);
@@ -210,6 +206,9 @@ public class CursoService {
                 .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado con ID: " + id));
 
         // Actualizar solo los campos proporcionados
+        cursoMapper.updateEntityFromDto(request, curso);
+
+        // Actualizar relaciones manualmente
         if (request.asignaturaId() != null) {
             Asignatura asignatura = asignaturaRepository.findById(request.asignaturaId())
                     .orElseThrow(() -> new ResourceNotFoundException(
@@ -233,19 +232,6 @@ public class CursoService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Periodo no encontrado con ID: " + request.periodoId()));
             curso.setPeriodo(periodo);
-        }
-
-        if (request.nombreGrupo() != null) {
-            curso.setNombreGrupo(request.nombreGrupo());
-        }
-        if (request.aulaDefault() != null) {
-            curso.setAulaDefault(request.aulaDefault());
-        }
-        if (request.cupo() != null) {
-            curso.setCupo(request.cupo());
-        }
-        if (request.imagenUrl() != null) {
-            curso.setImagenUrl(request.imagenUrl());
         }
 
         Curso cursoActualizado = cursoRepository.save(curso);

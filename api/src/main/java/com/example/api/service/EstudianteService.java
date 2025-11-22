@@ -1,6 +1,5 @@
 package com.example.api.service;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -135,15 +134,8 @@ public class EstudianteService {
         }
 
         // Crear estudiante
-        Estudiante estudiante = new Estudiante();
+        Estudiante estudiante = estudianteMapper.toEntity(request);
         estudiante.setUsuario(usuario);
-        estudiante.setCodigoEstudiante(request.codigoEstudiante());
-        estudiante.setFechaNacimiento(request.fechaNacimiento());
-        estudiante.setDireccion(request.direccion());
-        estudiante.setGenero(request.genero() != null ? request.genero() : Genero.O);
-        estudiante.setIngreso(request.ingreso() != null ? request.ingreso() : LocalDate.now());
-        estudiante.setActivo(request.activo() != null ? request.activo() : true);
-        estudiante.setFotoUrl(request.fotoUrl());
 
         Estudiante guardado = estudianteRepository.save(estudiante);
         return estudianteMapper.toResponse(guardado);
@@ -173,24 +165,7 @@ public class EstudianteService {
         }
 
         // Actualizar campos opcionales
-        if (request.fechaNacimiento() != null) {
-            estudiante.setFechaNacimiento(request.fechaNacimiento());
-        }
-        if (request.direccion() != null) {
-            estudiante.setDireccion(request.direccion());
-        }
-        if (request.genero() != null) {
-            estudiante.setGenero(request.genero());
-        }
-        if (request.ingreso() != null) {
-            estudiante.setIngreso(request.ingreso());
-        }
-        if (request.activo() != null) {
-            estudiante.setActivo(request.activo());
-        }
-        if (request.fotoUrl() != null) {
-            estudiante.setFotoUrl(request.fotoUrl());
-        }
+        estudianteMapper.updateEntityFromDto(request, estudiante);
 
         Estudiante actualizado = estudianteRepository.save(estudiante);
         return estudianteMapper.toResponse(actualizado);

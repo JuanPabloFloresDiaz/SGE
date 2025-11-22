@@ -220,15 +220,9 @@ public class UsuarioService {
         }
 
         // Crear el usuario
-        Usuario usuario = new Usuario();
-        usuario.setUsername(request.username());
+        Usuario usuario = usuarioMapper.toEntity(request);
         usuario.setPasswordHash(passwordEncoder.encode(request.password()));
-        usuario.setNombre(request.nombre());
-        usuario.setEmail(request.email());
-        usuario.setTelefono(request.telefono());
         usuario.setRol(rol);
-        usuario.setActivo(request.activo() != null ? request.activo() : true);
-        usuario.setFotoPerfilUrl(request.fotoPerfilUrl());
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
         return usuarioMapper.toResponse(savedUsuario);
@@ -252,34 +246,25 @@ public class UsuarioService {
         }
 
         // Actualizar username si se proporciona
+        // Validar username si se proporciona
         if (request.username() != null && !request.username().equals(usuario.getUsername())) {
             if (usuarioRepository.existsByUsernameAndIdNot(request.username(), id)) {
                 throw new DuplicateResourceException("Ya existe un usuario con el username: " + request.username());
             }
-            usuario.setUsername(request.username());
         }
 
-        // Actualizar password si se proporciona
-        if (request.password() != null) {
-            usuario.setPasswordHash(passwordEncoder.encode(request.password()));
-        }
-
-        // Actualizar nombre si se proporciona
-        if (request.nombre() != null) {
-            usuario.setNombre(request.nombre());
-        }
-
-        // Actualizar email si se proporciona
+        // Validar email si se proporciona
         if (request.email() != null && !request.email().equals(usuario.getEmail())) {
             if (usuarioRepository.existsByEmailAndIdNot(request.email(), id)) {
                 throw new DuplicateResourceException("Ya existe un usuario con el email: " + request.email());
             }
-            usuario.setEmail(request.email());
         }
 
-        // Actualizar teléfono si se proporciona
-        if (request.telefono() != null) {
-            usuario.setTelefono(request.telefono());
+        usuarioMapper.updateEntityFromDto(request, usuario);
+
+        // Actualizar password si se proporciona
+        if (request.password() != null) {
+            usuario.setPasswordHash(passwordEncoder.encode(request.password()));
         }
 
         // Actualizar rol si se proporciona
@@ -292,16 +277,6 @@ public class UsuarioService {
             }
 
             usuario.setRol(rol);
-        }
-
-        // Actualizar estado activo si se proporciona
-        if (request.activo() != null) {
-            usuario.setActivo(request.activo());
-        }
-
-        // Actualizar foto de perfil si se proporciona
-        if (request.fotoPerfilUrl() != null) {
-            usuario.setFotoPerfilUrl(request.fotoPerfilUrl());
         }
 
         Usuario updatedUsuario = usuarioRepository.save(usuario);

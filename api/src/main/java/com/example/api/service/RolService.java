@@ -108,9 +108,7 @@ public class RolService {
             throw new DuplicateResourceException("Rol", "nombre", request.nombre());
         }
 
-        Rol rol = new Rol();
-        rol.setNombre(request.nombre());
-        rol.setDescripcion(request.descripcion());
+        Rol rol = rolMapper.toEntity(request);
 
         Rol savedRol = rolRepository.save(rol);
         return rolMapper.toResponse(savedRol);
@@ -135,17 +133,15 @@ public class RolService {
 
         // Si se va a actualizar el nombre, validar que no exista otro rol con ese
         // nombre
+        // Si se va a actualizar el nombre, validar que no exista otro rol con ese
+        // nombre
         if (request.nombre() != null && !request.nombre().equals(rol.getNombre())) {
             if (rolRepository.existsByNombreAndIdNot(request.nombre(), id)) {
                 throw new DuplicateResourceException("Rol", "nombre", request.nombre());
             }
-            rol.setNombre(request.nombre());
         }
 
-        // Actualizar descripción si se proporciona
-        if (request.descripcion() != null) {
-            rol.setDescripcion(request.descripcion());
-        }
+        rolMapper.updateEntityFromDto(request, rol);
 
         Rol updatedRol = rolRepository.save(rol);
         return rolMapper.toResponse(updatedRol);

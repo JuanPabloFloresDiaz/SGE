@@ -98,14 +98,8 @@ public class TemaService {
         Unidad unidad = unidadRepository.findById(request.unidadId())
                 .orElseThrow(() -> new ResourceNotFoundException("Unidad no encontrada con ID: " + request.unidadId()));
 
-        Tema tema = new Tema();
+        Tema tema = temaMapper.toEntity(request);
         tema.setUnidad(unidad);
-        tema.setTitulo(request.titulo());
-        tema.setDescripcion(request.descripcion());
-        tema.setNumero(request.numero());
-        tema.setDuracionMinutos(request.duracionMinutos());
-        tema.setDocumentoUrl(request.documentoUrl());
-        tema.setDocumentoNombre(request.documentoNombre());
 
         Tema savedTema = temaRepository.save(tema);
         return temaMapper.toResponse(savedTema);
@@ -118,24 +112,7 @@ public class TemaService {
         Tema tema = temaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tema no encontrado con ID: " + id));
 
-        if (request.titulo() != null) {
-            tema.setTitulo(request.titulo());
-        }
-        if (request.descripcion() != null) {
-            tema.setDescripcion(request.descripcion());
-        }
-        if (request.numero() != null) {
-            tema.setNumero(request.numero());
-        }
-        if (request.duracionMinutos() != null) {
-            tema.setDuracionMinutos(request.duracionMinutos());
-        }
-        if (request.documentoUrl() != null) {
-            tema.setDocumentoUrl(request.documentoUrl());
-        }
-        if (request.documentoNombre() != null) {
-            tema.setDocumentoNombre(request.documentoNombre());
-        }
+        temaMapper.updateEntityFromDto(request, tema);
 
         Tema updatedTema = temaRepository.save(tema);
         return temaMapper.toResponse(updatedTema);

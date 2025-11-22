@@ -137,17 +137,9 @@ public class ActividadService {
             throw new IllegalArgumentException("La fecha de cierre debe ser posterior a la fecha de apertura");
         }
 
-        Actividad actividad = new Actividad();
+        Actividad actividad = actividadMapper.toEntity(request);
         actividad.setAsignatura(asignatura);
         actividad.setProfesor(profesor);
-        actividad.setTitulo(request.titulo());
-        actividad.setDescripcion(request.descripcion());
-        actividad.setFechaApertura(request.fechaApertura());
-        actividad.setFechaCierre(request.fechaCierre());
-        actividad.setImagenUrl(request.imagenUrl());
-        actividad.setDocumentoUrl(request.documentoUrl());
-        actividad.setDocumentoNombre(request.documentoNombre());
-        actividad.setActivo(request.activo() != null ? request.activo() : true);
 
         Actividad saved = actividadRepository.save(actividad);
         return actividadMapper.toResponse(saved);
@@ -174,36 +166,12 @@ public class ActividadService {
             actividad.setProfesor(profesor);
         }
 
-        if (request.titulo() != null) {
-            actividad.setTitulo(request.titulo());
-        }
-        if (request.descripcion() != null) {
-            actividad.setDescripcion(request.descripcion());
-        }
-        if (request.fechaApertura() != null) {
-            actividad.setFechaApertura(request.fechaApertura());
-        }
-        if (request.fechaCierre() != null) {
-            actividad.setFechaCierre(request.fechaCierre());
-        }
+        actividadMapper.updateEntityFromDto(request, actividad);
 
-        // Validar fechas si se actualizaron ambas
+        // Validar fechas si se actualizaron ambas (o una y la otra ya estaba)
         if (actividad.getFechaCierre().isBefore(actividad.getFechaApertura()) ||
                 actividad.getFechaCierre().isEqual(actividad.getFechaApertura())) {
             throw new IllegalArgumentException("La fecha de cierre debe ser posterior a la fecha de apertura");
-        }
-
-        if (request.imagenUrl() != null) {
-            actividad.setImagenUrl(request.imagenUrl());
-        }
-        if (request.documentoUrl() != null) {
-            actividad.setDocumentoUrl(request.documentoUrl());
-        }
-        if (request.documentoNombre() != null) {
-            actividad.setDocumentoNombre(request.documentoNombre());
-        }
-        if (request.activo() != null) {
-            actividad.setActivo(request.activo());
         }
 
         Actividad updated = actividadRepository.save(actividad);

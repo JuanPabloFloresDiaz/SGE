@@ -134,16 +134,10 @@ public class ClaseService {
                     .orElseThrow(() -> new ResourceNotFoundException("Tema no encontrado con ID: " + request.temaId()));
         }
 
-        Clase clase = new Clase();
+        Clase clase = claseMapper.toEntity(request);
         clase.setCurso(curso);
-        clase.setFecha(request.fecha());
-        clase.setInicio(request.inicio());
-        clase.setFin(request.fin());
         clase.setUnidad(unidad);
         clase.setTema(tema);
-        clase.setNotas(request.notas());
-        clase.setDocumentoUrl(request.documentoUrl());
-        clase.setDocumentoNombre(request.documentoNombre());
 
         Clase savedClase = claseRepository.save(clase);
         return claseMapper.toResponse(savedClase);
@@ -156,15 +150,8 @@ public class ClaseService {
         Clase clase = claseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Clase no encontrada con ID: " + id));
 
-        if (request.fecha() != null) {
-            clase.setFecha(request.fecha());
-        }
-        if (request.inicio() != null) {
-            clase.setInicio(request.inicio());
-        }
-        if (request.fin() != null) {
-            clase.setFin(request.fin());
-        }
+        claseMapper.updateEntityFromDto(request, clase);
+
         if (request.unidadId() != null) {
             if (request.unidadId().isBlank()) {
                 clase.setUnidad(null);
@@ -184,15 +171,6 @@ public class ClaseService {
                                 () -> new ResourceNotFoundException("Tema no encontrado con ID: " + request.temaId()));
                 clase.setTema(tema);
             }
-        }
-        if (request.notas() != null) {
-            clase.setNotas(request.notas());
-        }
-        if (request.documentoUrl() != null) {
-            clase.setDocumentoUrl(request.documentoUrl());
-        }
-        if (request.documentoNombre() != null) {
-            clase.setDocumentoNombre(request.documentoNombre());
         }
 
         Clase updatedClase = claseRepository.save(clase);

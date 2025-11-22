@@ -119,11 +119,7 @@ public class AsignaturaService {
         }
 
         // Crear nueva asignatura
-        Asignatura asignatura = new Asignatura();
-        asignatura.setCodigo(request.codigo());
-        asignatura.setNombre(request.nombre());
-        asignatura.setDescripcion(request.descripcion());
-        asignatura.setImagenUrl(request.imagenUrl());
+        Asignatura asignatura = asignaturaMapper.toEntity(request);
 
         // Guardar
         Asignatura asignaturaGuardada = asignaturaRepository.save(asignatura);
@@ -149,17 +145,9 @@ public class AsignaturaService {
             if (asignaturaRepository.existsByCodigoAndIdNot(request.codigo(), id)) {
                 throw new IllegalArgumentException("Ya existe una asignatura con el código: " + request.codigo());
             }
-            asignatura.setCodigo(request.codigo());
         }
-        if (request.nombre() != null) {
-            asignatura.setNombre(request.nombre());
-        }
-        if (request.descripcion() != null) {
-            asignatura.setDescripcion(request.descripcion());
-        }
-        if (request.imagenUrl() != null) {
-            asignatura.setImagenUrl(request.imagenUrl());
-        }
+        
+        asignaturaMapper.updateEntityFromDto(request, asignatura);
 
         Asignatura asignaturaActualizada = asignaturaRepository.save(asignatura);
         return asignaturaMapper.toResponse(asignaturaActualizada);

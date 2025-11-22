@@ -91,10 +91,10 @@ public class TipoEvaluacionService {
      * Crea un nuevo tipo de evaluación.
      */
     public TipoEvaluacionResponse createTipoEvaluacion(CreateTipoEvaluacionRequest request) {
-        TipoEvaluacion tipoEvaluacion = new TipoEvaluacion();
-        tipoEvaluacion.setNombre(request.nombre());
-        tipoEvaluacion.setDescripcion(request.descripcion());
-        tipoEvaluacion.setPeso(request.peso() != null ? request.peso() : java.math.BigDecimal.ZERO);
+        TipoEvaluacion tipoEvaluacion = tipoEvaluacionMapper.toEntity(request);
+        if (tipoEvaluacion.getPeso() == null) {
+            tipoEvaluacion.setPeso(java.math.BigDecimal.ZERO);
+        }
 
         TipoEvaluacion saved = tipoEvaluacionRepository.save(tipoEvaluacion);
         return tipoEvaluacionMapper.toResponse(saved);
@@ -107,15 +107,7 @@ public class TipoEvaluacionService {
         TipoEvaluacion tipoEvaluacion = tipoEvaluacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de evaluación no encontrado con ID: " + id));
 
-        if (request.nombre() != null) {
-            tipoEvaluacion.setNombre(request.nombre());
-        }
-        if (request.descripcion() != null) {
-            tipoEvaluacion.setDescripcion(request.descripcion());
-        }
-        if (request.peso() != null) {
-            tipoEvaluacion.setPeso(request.peso());
-        }
+        tipoEvaluacionMapper.updateEntityFromDto(request, tipoEvaluacion);
 
         TipoEvaluacion updated = tipoEvaluacionRepository.save(tipoEvaluacion);
         return tipoEvaluacionMapper.toResponse(updated);
