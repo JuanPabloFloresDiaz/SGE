@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: audit-service
+  data:
+    mongodb:
+      host: ${SPRING_DATA_MONGODB_HOST}
+      port: ${SPRING_DATA_MONGODB_PORT:27017}
+      database: ${SPRING_DATA_MONGODB_DATABASE:audit_db}
+
+server:
+  port: 8081
