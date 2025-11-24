@@ -92,9 +92,7 @@ public class TipoEvaluacionService {
      */
     public TipoEvaluacionResponse createTipoEvaluacion(CreateTipoEvaluacionRequest request) {
         TipoEvaluacion tipoEvaluacion = tipoEvaluacionMapper.toEntity(request);
-        if (tipoEvaluacion.getPeso() == null) {
-            tipoEvaluacion.setPeso(java.math.BigDecimal.ZERO);
-        }
+        // Peso eliminado de la entidad
 
         TipoEvaluacion saved = tipoEvaluacionRepository.save(tipoEvaluacion);
         return tipoEvaluacionMapper.toResponse(saved);

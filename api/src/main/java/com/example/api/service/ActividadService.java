@@ -14,12 +14,15 @@ import com.example.api.dto.request.UpdateActividadRequest;
 import com.example.api.dto.response.ActividadResponse;
 import com.example.api.exception.ResourceNotFoundException;
 import com.example.api.model.Actividad;
-import com.example.api.model.Asignatura;
+import com.example.api.model.Curso;
 import com.example.api.model.Profesor;
+import com.example.api.model.Curso;
 import com.example.api.repository.ActividadRepository;
-import com.example.api.repository.AsignaturaRepository;
+import com.example.api.repository.CursoRepository;
 import com.example.api.repository.ProfesorRepository;
+import com.example.api.repository.TiposPonderacionCursoRepository;
 import com.example.api.mapper.ActividadMapper;
+import com.example.api.model.TiposPonderacionCurso;
 
 /**
  * Servicio que contiene la lógica de negocio para la gestión de actividades.
@@ -29,20 +32,23 @@ import com.example.api.mapper.ActividadMapper;
 public class ActividadService {
 
     private final ActividadRepository actividadRepository;
-    private final AsignaturaRepository asignaturaRepository;
+    private final CursoRepository cursoRepository;
     private final ProfesorRepository profesorRepository;
+    private final TiposPonderacionCursoRepository tiposPonderacionCursoRepository;
     private final ActividadMapper actividadMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
     public ActividadService(ActividadRepository actividadRepository,
-            AsignaturaRepository asignaturaRepository,
+            CursoRepository cursoRepository,
             ProfesorRepository profesorRepository,
+            TiposPonderacionCursoRepository tiposPonderacionCursoRepository,
             ActividadMapper actividadMapper) {
         this.actividadRepository = actividadRepository;
-        this.asignaturaRepository = asignaturaRepository;
+        this.cursoRepository = cursoRepository;
         this.profesorRepository = profesorRepository;
+        this.tiposPonderacionCursoRepository = tiposPonderacionCursoRepository;
         this.actividadMapper = actividadMapper;
     }
 
@@ -121,10 +127,10 @@ public class ActividadService {
      * Crea una nueva actividad.
      */
     public ActividadResponse createActividad(CreateActividadRequest request) {
-        // Validar que la asignatura existe
-        Asignatura asignatura = asignaturaRepository.findById(request.asignaturaId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Asignatura no encontrada con ID: " + request.asignaturaId()));
+        // Validar que la asignatura existe (implícito al buscar cursos)
+        // Asignatura asignatura = asignaturaRepository.findById(request.asignaturaId())
+        // .orElseThrow(() -> new ResourceNotFoundException(
+        // "Asignatura no encontrada con ID: " + request.asignaturaId()));
 
         // Validar que el profesor existe
         Profesor profesor = profesorRepository.findById(request.profesorId())
@@ -137,9 +143,21 @@ public class ActividadService {
             throw new IllegalArgumentException("La fecha de cierre debe ser posterior a la fecha de apertura");
         }
 
+        // Validar que el curso existe
+        Curso curso = cursoRepository.findById(request.cursoId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Curso no encontrado con ID: " + request.cursoId()));
+
         Actividad actividad = actividadMapper.toEntity(request);
-        actividad.setAsignatura(asignatura);
+        actividad.setCurso(curso);
         actividad.setProfesor(profesor);
+
+        if (request.ponderacionId() != null) {
+            TiposPonderacionCurso ponderacion = tiposPonderacionCursoRepository.findById(request.ponderacionId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Tipo de ponderación no encontrado con ID: " + request.ponderacionId()));
+            actividad.setTipoPonderacion(ponderacion);
+        }
 
         Actividad saved = actividadRepository.save(actividad);
         return actividadMapper.toResponse(saved);
@@ -152,11 +170,11 @@ public class ActividadService {
         Actividad actividad = actividadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con ID: " + id));
 
-        if (request.asignaturaId() != null) {
-            Asignatura asignatura = asignaturaRepository.findById(request.asignaturaId())
+        if (request.cursoId() != null) {
+            Curso curso = cursoRepository.findById(request.cursoId())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "Asignatura no encontrada con ID: " + request.asignaturaId()));
-            actividad.setAsignatura(asignatura);
+                            "Curso no encontrado con ID: " + request.cursoId()));
+            actividad.setCurso(curso);
         }
 
         if (request.profesorId() != null) {
@@ -164,6 +182,13 @@ public class ActividadService {
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "Profesor no encontrado con ID: " + request.profesorId()));
             actividad.setProfesor(profesor);
+        }
+
+        if (request.ponderacionId() != null) {
+            TiposPonderacionCurso ponderacion = tiposPonderacionCursoRepository.findById(request.ponderacionId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Tipo de ponderación no encontrado con ID: " + request.ponderacionId()));
+            actividad.setTipoPonderacion(ponderacion);
         }
 
         actividadMapper.updateEntityFromDto(request, actividad);

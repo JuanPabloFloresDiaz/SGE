@@ -35,6 +35,10 @@ public class Evaluacion extends BaseEntity {
     @JoinColumn(name = "tipo_id", nullable = false)
     private TipoEvaluacion tipoEvaluacion;
 
+    @ManyToOne
+    @JoinColumn(name = "ponderacion_id")
+    private TiposPonderacionCurso tipoPonderacion;
+
     @Column(name = "nombre", nullable = false, length = 200)
     private String nombre;
 

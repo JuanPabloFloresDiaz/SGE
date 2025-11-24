@@ -14,7 +14,8 @@ import com.example.api.model.Actividad;
 
 /**
  * Repositorio para la entidad Actividad.
- * Proporciona métodos JPA para operaciones CRUD básicas y consultas personalizadas.
+ * Proporciona métodos JPA para operaciones CRUD básicas y consultas
+ * personalizadas.
  */
 @Repository
 public interface ActividadRepository extends JpaRepository<Actividad, String> {
@@ -52,7 +53,7 @@ public interface ActividadRepository extends JpaRepository<Actividad, String> {
      * @param asignaturaId ID de la asignatura
      * @return Lista de actividades de la asignatura
      */
-    @Query("SELECT a FROM Actividad a WHERE a.asignatura.id = :asignaturaId AND a.deletedAt IS NULL ORDER BY a.fechaApertura DESC")
+    @Query("SELECT a FROM Actividad a WHERE a.curso.asignatura.id = :asignaturaId AND a.deletedAt IS NULL ORDER BY a.fechaApertura DESC")
     List<Actividad> findByAsignaturaId(@Param("asignaturaId") String asignaturaId);
 
     /**
@@ -66,7 +67,8 @@ public interface ActividadRepository extends JpaRepository<Actividad, String> {
     List<Actividad> findByProfesorId(@Param("profesorId") String profesorId);
 
     /**
-     * Obtiene las actividades actualmente abiertas (fecha actual entre apertura y cierre).
+     * Obtiene las actividades actualmente abiertas (fecha actual entre apertura y
+     * cierre).
      * Solo incluye actividades no eliminadas y activas.
      *
      * @param fechaActual Fecha y hora actual

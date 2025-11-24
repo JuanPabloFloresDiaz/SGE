@@ -29,9 +29,6 @@ public class TipoEvaluacion extends BaseEntity {
     @Column(name = "descripcion", length = 255)
     private String descripcion;
 
-    @Column(name = "peso", precision = 5, scale = 2)
-    private java.math.BigDecimal peso = java.math.BigDecimal.ZERO;
-
     // Relaciones
     @OneToMany(mappedBy = "tipoEvaluacion")
     private List<Evaluacion> evaluaciones;

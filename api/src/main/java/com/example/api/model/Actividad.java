@@ -1,5 +1,6 @@
 package com.example.api.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -15,7 +16,8 @@ import lombok.Setter;
 
 /**
  * Entidad que representa una actividad o tarea asignada por un profesor.
- * Las actividades pertenecen a una asignatura específica y tienen fechas de apertura y cierre.
+ * Las actividades pertenecen a una asignatura específica y tienen fechas de
+ * apertura y cierre.
  */
 @Entity
 @Table(name = "actividades")
@@ -26,8 +28,12 @@ import lombok.Setter;
 public class Actividad extends BaseEntity {
 
     @ManyToOne
-    @JoinColumn(name = "asignatura_id", nullable = false)
-    private Asignatura asignatura;
+    @JoinColumn(name = "curso_id", nullable = false)
+    private Curso curso;
+
+    @ManyToOne
+    @JoinColumn(name = "ponderacion_id")
+    private TiposPonderacionCurso tipoPonderacion;
 
     @ManyToOne
     @JoinColumn(name = "profesor_id", nullable = false)
@@ -58,8 +64,12 @@ public class Actividad extends BaseEntity {
     @Column(name = "activo", nullable = false)
     private Boolean activo = true;
 
+    @Column(name = "peso", precision = 5, scale = 2)
+    private BigDecimal peso;
+
     /**
      * Verifica si la actividad está abierta en el momento actual.
+     * 
      * @return true si la fecha actual está entre la fecha de apertura y cierre
      */
     public boolean estaAbierta() {
@@ -69,6 +79,7 @@ public class Actividad extends BaseEntity {
 
     /**
      * Verifica si la actividad ya cerró.
+     * 
      * @return true si la fecha actual es posterior a la fecha de cierre
      */
     public boolean estaCerrada() {
@@ -77,6 +88,7 @@ public class Actividad extends BaseEntity {
 
     /**
      * Verifica si la actividad aún no ha abierto.
+     * 
      * @return true si la fecha actual es anterior a la fecha de apertura
      */
     public boolean noHaAbierto() {

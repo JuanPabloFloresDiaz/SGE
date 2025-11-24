@@ -14,13 +14,15 @@ import com.example.api.dto.response.ActividadResponse;
 import com.example.api.model.Actividad;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING, uses = { AsignaturaMapper.class,
-        ProfesorMapper.class })
+        ProfesorMapper.class, TiposPonderacionCursoMapper.class })
 public interface ActividadMapper {
 
     ActividadResponse toResponse(Actividad actividad);
 
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "asignatura", ignore = true)
+    @Mapping(target = "curso", ignore = true)
+    @Mapping(target = "tipoPonderacion", ignore = true)
+    @Mapping(target = "peso", ignore = true)
     @Mapping(target = "profesor", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
@@ -30,7 +32,9 @@ public interface ActividadMapper {
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "asignatura", ignore = true)
+    @Mapping(target = "curso", ignore = true)
+    @Mapping(target = "tipoPonderacion", ignore = true)
+    @Mapping(target = "peso", ignore = true)
     @Mapping(target = "profesor", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)

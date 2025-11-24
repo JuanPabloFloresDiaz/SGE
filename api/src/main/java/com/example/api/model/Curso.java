@@ -64,4 +64,7 @@ public class Curso extends BaseEntity {
 
     @OneToMany(mappedBy = "curso")
     private List<Evaluacion> evaluaciones;
+
+    @OneToMany(mappedBy = "curso")
+    private List<TiposPonderacionCurso> tiposPonderacion;
 }
