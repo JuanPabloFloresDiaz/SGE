@@ -244,7 +244,7 @@ services:
       mongo_db:
         condition: service_started
     ports:
-      - "8081:8081"
+      - "8082:8082"
     environment:
       - SPRING_DATA_MONGODB_HOST=mongo_db
       - SPRING_DATA_MONGODB_PORT=27017
