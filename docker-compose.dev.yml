@@ -177,7 +177,7 @@ services:
       - 'MYSQL_USER=sge_user'
       - 'MYSQL_PASSWORD=sge_password'
     ports:
-      - '3311:3306'
+      - '3312:3306'
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
