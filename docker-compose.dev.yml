@@ -252,9 +252,28 @@ services:
       - SPRING_DATA_REDIS_PORT=6379
       - SPRING_DATA_REDIS_PASSWORD=${REDIS_PASSWORD}
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: always
+
+  ollama_api:
+    build: ./OllamaService
+    container_name: ollama_api
+    ports:
+      - "8015:8015"
+    command: uvicorn main:app --host 0.0.0.0 --port 8015
+    depends_on:
+      - ollama
+
 volumes:
   postgres_data:
   redis_data:
   minio_data:
   mysql_data:
   mongo_data:
+  ollama_data:
