@@ -1,0 +1,7 @@
+# OllamaService/requirements.txt
+
+# El framework FastAPI
+fastapi
+
+# Servidor ASGI para correr FastAPI (usaremos la versión standard)
+uvicorn[standard]
