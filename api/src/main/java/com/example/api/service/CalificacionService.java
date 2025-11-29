@@ -12,6 +12,11 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -42,6 +47,8 @@ public class CalificacionService {
     private final EvaluacionRepository evaluacionRepository;
     private final EstudianteRepository estudianteRepository;
     private final CalificacionMapper calificacionMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
@@ -49,11 +56,15 @@ public class CalificacionService {
     public CalificacionService(CalificacionRepository calificacionRepository,
             EvaluacionRepository evaluacionRepository,
             EstudianteRepository estudianteRepository,
-            CalificacionMapper calificacionMapper) {
+            CalificacionMapper calificacionMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.calificacionRepository = calificacionRepository;
         this.evaluacionRepository = evaluacionRepository;
         this.estudianteRepository = estudianteRepository;
         this.calificacionMapper = calificacionMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -365,7 +376,7 @@ public class CalificacionService {
     /**
      * Crea una nueva calificación.
      */
-    public CalificacionResponse createCalificacion(CreateCalificacionRequest request) {
+    public CalificacionResponse createCalificacion(CreateCalificacionRequest request, HttpServletRequest httpRequest) {
         // Validar que la evaluación existe
         Evaluacion evaluacion = evaluacionRepository.findById(request.evaluacionId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -383,13 +394,18 @@ public class CalificacionService {
         calificacion.setComentario(request.comentario());
 
         Calificacion saved = calificacionRepository.save(calificacion);
+
+        // Audit Log
+        logCalificacionAction("CREATE", saved, httpRequest);
+
         return calificacionMapper.toResponse(saved);
     }
 
     /**
      * Actualiza una calificación existente.
      */
-    public CalificacionResponse updateCalificacion(String id, UpdateCalificacionRequest request) {
+    public CalificacionResponse updateCalificacion(String id, UpdateCalificacionRequest request,
+            HttpServletRequest httpRequest) {
         Calificacion calificacion = calificacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Calificación no encontrada con ID: " + id));
 
@@ -401,17 +417,24 @@ public class CalificacionService {
         }
 
         Calificacion updated = calificacionRepository.save(calificacion);
+
+        // Audit Log
+        logCalificacionAction("UPDATE", updated, httpRequest);
+
         return calificacionMapper.toResponse(updated);
     }
 
     /**
      * Elimina lógicamente una calificación (soft delete).
      */
-    public void deleteCalificacion(String id) {
+    public void deleteCalificacion(String id, HttpServletRequest httpRequest) {
         Calificacion calificacion = calificacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Calificación no encontrada con ID: " + id));
         calificacion.setDeletedAt(LocalDateTime.now());
         calificacionRepository.save(calificacion);
+
+        // Audit Log
+        logCalificacionAction("DELETE", calificacion, httpRequest);
     }
 
     /**
@@ -432,5 +455,36 @@ public class CalificacionService {
         calificacion.setDeletedAt(null);
         Calificacion restored = calificacionRepository.save(calificacion);
         return calificacionMapper.toResponse(restored);
+    }
+
+    private void logCalificacionAction(String action, Calificacion calificacion, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            // Create a simplified map for the body to avoid recursion or large payloads
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("calificacionId", calificacion.getId());
+            bodyMap.put("nota", calificacion.getNota());
+            if (calificacion.getEstudiante() != null) {
+                bodyMap.put("estudianteId", calificacion.getEstudiante().getId());
+            }
+            if (calificacion.getEvaluacion() != null) {
+                bodyMap.put("evaluacionId", calificacion.getEvaluacion().getId());
+            }
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            // Log error but don't fail the transaction
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
