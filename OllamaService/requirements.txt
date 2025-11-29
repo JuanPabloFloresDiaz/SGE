@@ -1,7 +1,12 @@
-# OllamaService/requirements.txt
-
 # El framework FastAPI
 fastapi
 
-# Servidor ASGI para correr FastAPI (usaremos la versión standard)
+# Servidor ASGI para correr FastAPI
 uvicorn[standard]
+
+# Cliente HTTP para Ollama
+httpx
+
+# Base de datos
+psycopg2-binary
+SQLAlchemy

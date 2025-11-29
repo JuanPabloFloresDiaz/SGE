@@ -267,8 +267,32 @@ services:
     ports:
       - "8015:8015"
     command: uvicorn main:app --host 0.0.0.0 --port 8015
+    environment:
+      - DB_HOST=postgres_ollama
+      - DB_PORT=5432
+      - DB_NAME=ollama_db
+      - DB_USER=ollama_user
+      - DB_PASSWORD=ollama_password
     depends_on:
       - ollama
+      - postgres_ollama
+
+  postgres_ollama:
+    image: postgres:15-alpine
+    container_name: postgres_ollama
+    environment:
+      POSTGRES_USER: ollama_user
+      POSTGRES_PASSWORD: ollama_password
+      POSTGRES_DB: ollama_db
+    ports:
+      - "5447:5432"
+    volumes:
+      - postgres_ollama_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "ollama_user" ]
+      interval: 10s
+      retries: 5
+      start_period: 5s
 
 volumes:
   postgres_data:
@@ -277,3 +301,4 @@ volumes:
   mysql_data:
   mongo_data:
   ollama_data:
+  postgres_ollama_data:
