@@ -4,6 +4,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +43,8 @@ public class ClaseService {
     private final UnidadRepository unidadRepository;
     private final TemaRepository temaRepository;
     private final ClaseMapper claseMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
@@ -44,12 +53,16 @@ public class ClaseService {
             CursoRepository cursoRepository,
             UnidadRepository unidadRepository,
             TemaRepository temaRepository,
-            ClaseMapper claseMapper) {
+            ClaseMapper claseMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.claseRepository = claseRepository;
         this.cursoRepository = cursoRepository;
         this.unidadRepository = unidadRepository;
         this.temaRepository = temaRepository;
         this.claseMapper = claseMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -114,7 +127,7 @@ public class ClaseService {
     /**
      * Crea una nueva clase.
      */
-    public ClaseResponse createClase(CreateClaseRequest request) {
+    public ClaseResponse createClase(CreateClaseRequest request, HttpServletRequest httpRequest) {
         // Validar que el curso existe
         Curso curso = cursoRepository.findById(request.cursoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado con ID: " + request.cursoId()));
@@ -140,13 +153,17 @@ public class ClaseService {
         clase.setTema(tema);
 
         Clase savedClase = claseRepository.save(clase);
+
+        // Audit Log
+        logClaseAction("CREATE", savedClase, httpRequest);
+
         return claseMapper.toResponse(savedClase);
     }
 
     /**
      * Actualiza una clase existente.
      */
-    public ClaseResponse updateClase(String id, UpdateClaseRequest request) {
+    public ClaseResponse updateClase(String id, UpdateClaseRequest request, HttpServletRequest httpRequest) {
         Clase clase = claseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Clase no encontrada con ID: " + id));
 
@@ -174,17 +191,56 @@ public class ClaseService {
         }
 
         Clase updatedClase = claseRepository.save(clase);
+
+        // Audit Log
+        logClaseAction("UPDATE", updatedClase, httpRequest);
+
         return claseMapper.toResponse(updatedClase);
     }
 
     /**
      * Elimina lógicamente una clase (soft delete).
      */
-    public void deleteClase(String id) {
+    public void deleteClase(String id, HttpServletRequest httpRequest) {
         Clase clase = claseRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Clase no encontrada con ID: " + id));
         clase.setDeletedAt(LocalDateTime.now());
         claseRepository.save(clase);
+
+        // Audit Log
+        logClaseAction("DELETE", clase, httpRequest);
+    }
+
+    private void logClaseAction(String action, Clase clase, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("claseId", clase.getId());
+            bodyMap.put("fecha", clase.getFecha());
+            if (clase.getCurso() != null) {
+                bodyMap.put("cursoId", clase.getCurso().getId());
+            }
+            if (clase.getUnidad() != null) {
+                bodyMap.put("unidadId", clase.getUnidad().getId());
+            }
+            if (clase.getTema() != null) {
+                bodyMap.put("temaId", clase.getTema().getId());
+            }
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**

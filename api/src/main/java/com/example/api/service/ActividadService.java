@@ -3,6 +3,13 @@ package com.example.api.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -36,6 +43,8 @@ public class ActividadService {
     private final ProfesorRepository profesorRepository;
     private final TiposPonderacionCursoRepository tiposPonderacionCursoRepository;
     private final ActividadMapper actividadMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
@@ -44,12 +53,16 @@ public class ActividadService {
             CursoRepository cursoRepository,
             ProfesorRepository profesorRepository,
             TiposPonderacionCursoRepository tiposPonderacionCursoRepository,
-            ActividadMapper actividadMapper) {
+            ActividadMapper actividadMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.actividadRepository = actividadRepository;
         this.cursoRepository = cursoRepository;
         this.profesorRepository = profesorRepository;
         this.tiposPonderacionCursoRepository = tiposPonderacionCursoRepository;
         this.actividadMapper = actividadMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -126,7 +139,7 @@ public class ActividadService {
     /**
      * Crea una nueva actividad.
      */
-    public ActividadResponse createActividad(CreateActividadRequest request) {
+    public ActividadResponse createActividad(CreateActividadRequest request, HttpServletRequest httpRequest) {
         // Validar que la asignatura existe (implícito al buscar cursos)
         // Asignatura asignatura = asignaturaRepository.findById(request.asignaturaId())
         // .orElseThrow(() -> new ResourceNotFoundException(
@@ -160,13 +173,18 @@ public class ActividadService {
         }
 
         Actividad saved = actividadRepository.save(actividad);
+
+        // Audit Log
+        logActividadAction("CREATE", saved, httpRequest);
+
         return actividadMapper.toResponse(saved);
     }
 
     /**
      * Actualiza una actividad existente.
      */
-    public ActividadResponse updateActividad(String id, UpdateActividadRequest request) {
+    public ActividadResponse updateActividad(String id, UpdateActividadRequest request,
+            HttpServletRequest httpRequest) {
         Actividad actividad = actividadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con ID: " + id));
 
@@ -200,17 +218,24 @@ public class ActividadService {
         }
 
         Actividad updated = actividadRepository.save(actividad);
+
+        // Audit Log
+        logActividadAction("UPDATE", updated, httpRequest);
+
         return actividadMapper.toResponse(updated);
     }
 
     /**
      * Elimina lógicamente una actividad (soft delete).
      */
-    public void deleteActividad(String id) {
+    public void deleteActividad(String id, HttpServletRequest httpRequest) {
         Actividad actividad = actividadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Actividad no encontrada con ID: " + id));
         actividad.setDeletedAt(LocalDateTime.now());
         actividadRepository.save(actividad);
+
+        // Audit Log
+        logActividadAction("DELETE", actividad, httpRequest);
     }
 
     /**
@@ -231,5 +256,34 @@ public class ActividadService {
         actividad.setDeletedAt(null);
         Actividad restored = actividadRepository.save(actividad);
         return actividadMapper.toResponse(restored);
+    }
+
+    private void logActividadAction(String action, Actividad actividad, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("actividadId", actividad.getId());
+            bodyMap.put("titulo", actividad.getTitulo());
+            if (actividad.getCurso() != null) {
+                bodyMap.put("cursoId", actividad.getCurso().getId());
+            }
+            if (actividad.getProfesor() != null) {
+                bodyMap.put("profesorId", actividad.getProfesor().getId());
+            }
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

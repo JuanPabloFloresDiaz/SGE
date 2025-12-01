@@ -1,5 +1,7 @@
 package com.example.api.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,46 +29,28 @@ import jakarta.validation.Valid;
 @Tag(name = "Autenticación", description = "API para autenticación de usuarios")
 public class AuthController {
 
-    private final AuthService authService;
+        private final AuthService authService;
 
-    /**
-     * Constructor con inyección de dependencias.
-     *
-     * @param authService Servicio de autenticación
-     */
-    public AuthController(AuthService authService) {
-        this.authService = authService;
-    }
+        /**
+         * Constructor con inyección de dependencias.
+         *
+         * @param authService Servicio de autenticación
+         */
+        public AuthController(AuthService authService) {
+                this.authService = authService;
+        }
 
-    @Operation(
-            summary = "Iniciar sesión",
-            description = "Autentica un usuario y devuelve un token JWT válido por 24 horas"
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Login exitoso",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = AuthResponse.class)
-                    )
-            ),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Datos de entrada inválidos"
-            ),
-            @ApiResponse(
-                    responseCode = "401",
-                    description = "Credenciales incorrectas o usuario inactivo"
-            ),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Usuario no encontrado"
-            )
-    })
-    @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.login(request);
-        return ResponseEntity.ok(response);
-    }
+        @Operation(summary = "Iniciar sesión", description = "Autentica un usuario y devuelve un token JWT válido por 24 horas")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Login exitoso", content = @Content(mediaType = "application/json", schema = @Schema(implementation = AuthResponse.class))),
+                        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos"),
+                        @ApiResponse(responseCode = "401", description = "Credenciales incorrectas o usuario inactivo"),
+                        @ApiResponse(responseCode = "404", description = "Usuario no encontrado")
+        })
+        @PostMapping("/login")
+        public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
+                        HttpServletRequest httpRequest) {
+                AuthResponse response = authService.login(request, httpRequest);
+                return ResponseEntity.ok(response);
+        }
 }

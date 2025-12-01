@@ -1,9 +1,17 @@
 package com.example.api.service;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.example.api.dto.request.LoginRequest;
 import com.example.api.dto.response.AuthResponse;
@@ -23,16 +31,22 @@ public class AuthService {
     private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
     public AuthService(UsuarioRepository usuarioRepository,
-                      PasswordEncoder passwordEncoder,
-                      JwtService jwtService) {
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.usuarioRepository = usuarioRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -41,10 +55,10 @@ public class AuthService {
      * @param request Datos de login (username y password)
      * @return Respuesta de autenticación con token y datos del usuario
      * @throws ResourceNotFoundException Si el usuario no existe
-     * @throws BadCredentialsException Si la contraseña es incorrecta
+     * @throws BadCredentialsException   Si la contraseña es incorrecta
      */
     @Transactional(readOnly = true)
-    public AuthResponse login(LoginRequest request) {
+    public AuthResponse login(LoginRequest request, HttpServletRequest httpRequest) {
         // Buscar usuario por username
         Usuario usuario = usuarioRepository.findByUsername(request.username())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -63,10 +77,37 @@ public class AuthService {
         // Generar token JWT
         String token = jwtService.generateToken(usuario);
 
+        // Audit Log
+        logAuthAction("LOGIN", usuario, httpRequest);
+
         // Convertir a DTO
         UsuarioResponse usuarioResponse = toUsuarioResponse(usuario);
 
         return new AuthResponse(token, usuarioResponse);
+    }
+
+    private void logAuthAction(String action, Usuario usuario, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId(usuario.getId()); // For auth, we use the actual user ID
+            log.setAction(action);
+            log.setEndpoint(request != null ? request.getRequestURI() : "UNKNOWN");
+            log.setIpAddress(request != null ? request.getRemoteAddr() : "UNKNOWN");
+            log.setDevice(request != null ? request.getHeader("User-Agent") : "UNKNOWN");
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("username", usuario.getUsername());
+            bodyMap.put("email", usuario.getEmail());
+            bodyMap.put("rol", usuario.getRol().getNombre());
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -79,8 +120,7 @@ public class AuthService {
                 usuario.getRol().getDescripcion(),
                 usuario.getRol().getCreatedAt(),
                 usuario.getRol().getUpdatedAt(),
-                usuario.getRol().getDeletedAt()
-        );
+                usuario.getRol().getDeletedAt());
 
         return new UsuarioResponse(
                 usuario.getId(),
@@ -93,7 +133,6 @@ public class AuthService {
                 rolResponse,
                 usuario.getCreatedAt(),
                 usuario.getUpdatedAt(),
-                usuario.getDeletedAt()
-        );
+                usuario.getDeletedAt());
     }
 }

@@ -4,6 +4,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +41,8 @@ public class InscripcionService {
         private final CursoRepository cursoRepository;
         private final EstudianteRepository estudianteRepository;
         private final InscripcionMapper inscripcionMapper;
+        private final AuditProducer auditProducer;
+        private final ObjectMapper objectMapper;
 
         /**
          * Constructor con inyección de dependencias.
@@ -41,11 +50,15 @@ public class InscripcionService {
         public InscripcionService(InscripcionRepository inscripcionRepository,
                         CursoRepository cursoRepository,
                         EstudianteRepository estudianteRepository,
-                        InscripcionMapper inscripcionMapper) {
+                        InscripcionMapper inscripcionMapper,
+                        AuditProducer auditProducer,
+                        ObjectMapper objectMapper) {
                 this.inscripcionRepository = inscripcionRepository;
                 this.cursoRepository = cursoRepository;
                 this.estudianteRepository = estudianteRepository;
                 this.inscripcionMapper = inscripcionMapper;
+                this.auditProducer = auditProducer;
+                this.objectMapper = objectMapper;
         }
 
         /**
@@ -129,7 +142,7 @@ public class InscripcionService {
          * Valida que el curso tenga cupos disponibles y que no exista una inscripción
          * duplicada.
          */
-        public InscripcionResponse createInscripcion(CreateInscripcionRequest request) {
+        public InscripcionResponse createInscripcion(CreateInscripcionRequest request, HttpServletRequest httpRequest) {
                 // Validar que el curso existe
                 Curso curso = cursoRepository.findById(request.cursoId())
                                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -163,13 +176,18 @@ public class InscripcionService {
                 inscripcion.setEstado(request.estado() != null ? request.estado() : EstadoInscripcion.inscrito);
 
                 Inscripcion savedInscripcion = inscripcionRepository.save(inscripcion);
+
+                // Audit Log
+                logInscripcionAction("CREATE", savedInscripcion, httpRequest);
+
                 return inscripcionMapper.toResponse(savedInscripcion);
         }
 
         /**
          * Actualiza una inscripción existente.
          */
-        public InscripcionResponse updateInscripcion(String id, UpdateInscripcionRequest request) {
+        public InscripcionResponse updateInscripcion(String id, UpdateInscripcionRequest request,
+                        HttpServletRequest httpRequest) {
                 Inscripcion inscripcion = inscripcionRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Inscripción no encontrada con ID: " + id));
@@ -183,18 +201,55 @@ public class InscripcionService {
                 }
 
                 Inscripcion updatedInscripcion = inscripcionRepository.save(inscripcion);
+
+                // Audit Log
+                logInscripcionAction("UPDATE", updatedInscripcion, httpRequest);
+
                 return inscripcionMapper.toResponse(updatedInscripcion);
         }
 
         /**
          * Elimina lógicamente una inscripción (soft delete).
          */
-        public void deleteInscripcion(String id) {
+        public void deleteInscripcion(String id, HttpServletRequest httpRequest) {
                 Inscripcion inscripcion = inscripcionRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Inscripción no encontrada con ID: " + id));
                 inscripcion.setDeletedAt(LocalDateTime.now());
                 inscripcionRepository.save(inscripcion);
+
+                // Audit Log
+                logInscripcionAction("DELETE", inscripcion, httpRequest);
+        }
+
+        private void logInscripcionAction(String action, Inscripcion inscripcion, HttpServletRequest request) {
+                try {
+                        AuditLogDTO log = new AuditLogDTO();
+                        log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+                        log.setAction(action);
+                        log.setEndpoint(request.getRequestURI());
+                        log.setIpAddress(request.getRemoteAddr());
+                        log.setDevice(request.getHeader("User-Agent"));
+                        log.setTimestamp(java.time.Instant.now());
+
+                        Map<String, Object> bodyMap = new HashMap<>();
+                        bodyMap.put("inscripcionId", inscripcion.getId());
+                        bodyMap.put("fechaInscripcion", inscripcion.getFechaInscripcion());
+                        bodyMap.put("estado", inscripcion.getEstado());
+                        if (inscripcion.getCurso() != null) {
+                                bodyMap.put("cursoId", inscripcion.getCurso().getId());
+                        }
+                        if (inscripcion.getEstudiante() != null) {
+                                bodyMap.put("estudianteId", inscripcion.getEstudiante().getId());
+                        }
+
+                        log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+                        auditProducer.sendAuditLog(log);
+                } catch (Exception e) {
+                        System.err.println("Error sending audit log: " + e.getMessage());
+                        e.printStackTrace();
+                }
         }
 
         /**

@@ -4,6 +4,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,12 +31,16 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 public class StorageService {
 
     private final S3Client s3Client;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     @Value("${minio.bucket-name}")
     private String bucketName;
 
-    public StorageService(S3Client s3Client) {
+    public StorageService(S3Client s3Client, AuditProducer auditProducer, ObjectMapper objectMapper) {
         this.s3Client = s3Client;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -66,7 +78,7 @@ public class StorageService {
      * @param category La categoría donde se guardará (define el prefijo)
      * @return El path relativo del archivo guardado (ej: "actividades/uuid.jpg")
      */
-    public String storeFile(MultipartFile file, FileCategory category) {
+    public String storeFile(MultipartFile file, FileCategory category, HttpServletRequest httpRequest) {
         // Validar archivo
         if (file.isEmpty()) {
             throw new RuntimeException("El archivo está vacío");
@@ -99,6 +111,9 @@ public class StorageService {
 
             s3Client.putObject(putOb, RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
 
+            // Audit Log
+            logStorageAction("UPLOAD", objectKey, category.name(), httpRequest);
+
             return objectKey;
 
         } catch (IOException ex) {
@@ -117,7 +132,7 @@ public class StorageService {
      *         pero intentaremos verificar antes si queremos ser estrictos, aunque
      *         usualmente delete siempre retorna éxito si no hay error de red)
      */
-    public boolean deleteFile(String relativePath) {
+    public boolean deleteFile(String relativePath, HttpServletRequest httpRequest) {
         if (relativePath == null || relativePath.isEmpty()) {
             return false;
         }
@@ -135,6 +150,10 @@ public class StorageService {
                     .build();
 
             s3Client.deleteObject(deleteOb);
+
+            // Audit Log
+            logStorageAction("DELETE", relativePath, "UNKNOWN", httpRequest);
+
             return true;
 
         } catch (Exception ex) {
@@ -186,6 +205,29 @@ public class StorageService {
         } catch (Exception ex) {
             // Si hay otro error (ej: permisos), asumimos que no se puede acceder
             return false;
+        }
+    }
+
+    private void logStorageAction(String action, String fileKey, String category, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request != null ? request.getRequestURI() : "UNKNOWN");
+            log.setIpAddress(request != null ? request.getRemoteAddr() : "UNKNOWN");
+            log.setDevice(request != null ? request.getHeader("User-Agent") : "UNKNOWN");
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("fileKey", fileKey);
+            bodyMap.put("category", category);
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

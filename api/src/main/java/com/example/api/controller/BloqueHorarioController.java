@@ -2,6 +2,8 @@ package com.example.api.controller;
 
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -40,118 +42,113 @@ import jakarta.validation.Valid;
 @Tag(name = "Bloques Horario", description = "API para gestión de bloques de horario del sistema educativo")
 public class BloqueHorarioController {
 
-    private final BloqueHorarioService bloqueHorarioService;
+        private final BloqueHorarioService bloqueHorarioService;
 
-    public BloqueHorarioController(BloqueHorarioService bloqueHorarioService) {
-        this.bloqueHorarioService = bloqueHorarioService;
-    }
+        public BloqueHorarioController(BloqueHorarioService bloqueHorarioService) {
+                this.bloqueHorarioService = bloqueHorarioService;
+        }
 
-    @GetMapping
-    @Operation(summary = "Listar bloques de horario", description = "Obtiene una lista paginada de todos los bloques activos")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de bloques obtenida exitosamente",
-                    content = @Content(schema = @Schema(implementation = Page.class)))
-    })
-    public ResponseEntity<Page<BloqueHorarioResponse>> getAllBloques(
-            @Parameter(description = "Número de página (inicia en 0)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Tamaño de página", example = "20")
-            @RequestParam(defaultValue = "20") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(bloqueHorarioService.getAllBloques(pageable));
-    }
+        @GetMapping
+        @Operation(summary = "Listar bloques de horario", description = "Obtiene una lista paginada de todos los bloques activos")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista de bloques obtenida exitosamente", content = @Content(schema = @Schema(implementation = Page.class)))
+        })
+        public ResponseEntity<Page<BloqueHorarioResponse>> getAllBloques(
+                        @Parameter(description = "Número de página (inicia en 0)", example = "0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Tamaño de página", example = "20") @RequestParam(defaultValue = "20") int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(bloqueHorarioService.getAllBloques(pageable));
+        }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Obtener bloque por ID", description = "Busca y retorna un bloque de horario específico")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Bloque encontrado",
-                    content = @Content(schema = @Schema(implementation = BloqueHorarioResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Bloque no encontrado", content = @Content)
-    })
-    public ResponseEntity<BloqueHorarioResponse> getBloqueById(
-            @Parameter(description = "ID del bloque") @PathVariable String id) {
-        return ResponseEntity.ok(bloqueHorarioService.getBloqueById(id));
-    }
+        @GetMapping("/{id}")
+        @Operation(summary = "Obtener bloque por ID", description = "Busca y retorna un bloque de horario específico")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Bloque encontrado", content = @Content(schema = @Schema(implementation = BloqueHorarioResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Bloque no encontrado", content = @Content)
+        })
+        public ResponseEntity<BloqueHorarioResponse> getBloqueById(
+                        @Parameter(description = "ID del bloque") @PathVariable String id) {
+                return ResponseEntity.ok(bloqueHorarioService.getBloqueById(id));
+        }
 
-    @GetMapping("/ordenados")
-    @Operation(summary = "Bloques ordenados por hora", description = "Obtiene todos los bloques ordenados por hora de inicio")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista ordenada de bloques",
-                    content = @Content(schema = @Schema(implementation = List.class)))
-    })
-    public ResponseEntity<List<BloqueHorarioResponse>> getBloquesOrdenados() {
-        return ResponseEntity.ok(bloqueHorarioService.getBloquesOrdenados());
-    }
+        @GetMapping("/ordenados")
+        @Operation(summary = "Bloques ordenados por hora", description = "Obtiene todos los bloques ordenados por hora de inicio")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista ordenada de bloques", content = @Content(schema = @Schema(implementation = List.class)))
+        })
+        public ResponseEntity<List<BloqueHorarioResponse>> getBloquesOrdenados() {
+                return ResponseEntity.ok(bloqueHorarioService.getBloquesOrdenados());
+        }
 
-    @GetMapping("/deleted")
-    @Operation(summary = "Listar bloques eliminados", description = "Obtiene bloques eliminados lógicamente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de bloques eliminados",
-                    content = @Content(schema = @Schema(implementation = List.class)))
-    })
-    public ResponseEntity<List<BloqueHorarioResponse>> getBloquesDeleted() {
-        return ResponseEntity.ok(bloqueHorarioService.getBloquesDeleted());
-    }
+        @GetMapping("/deleted")
+        @Operation(summary = "Listar bloques eliminados", description = "Obtiene bloques eliminados lógicamente")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista de bloques eliminados", content = @Content(schema = @Schema(implementation = List.class)))
+        })
+        public ResponseEntity<List<BloqueHorarioResponse>> getBloquesDeleted() {
+                return ResponseEntity.ok(bloqueHorarioService.getBloquesDeleted());
+        }
 
-    @PostMapping
-    @Operation(summary = "Crear bloque de horario", description = "Registra un nuevo bloque en el sistema")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Bloque creado exitosamente",
-                    content = @Content(schema = @Schema(implementation = BloqueHorarioResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos o hora de fin anterior a hora de inicio", content = @Content)
-    })
-    public ResponseEntity<BloqueHorarioResponse> createBloque(
-            @Parameter(description = "Datos del bloque") @Valid @RequestBody CreateBloqueHorarioRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(bloqueHorarioService.createBloque(request));
-    }
+        @PostMapping
+        @Operation(summary = "Crear bloque de horario", description = "Registra un nuevo bloque en el sistema")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "201", description = "Bloque creado exitosamente", content = @Content(schema = @Schema(implementation = BloqueHorarioResponse.class))),
+                        @ApiResponse(responseCode = "400", description = "Datos inválidos o hora de fin anterior a hora de inicio", content = @Content)
+        })
+        public ResponseEntity<BloqueHorarioResponse> createBloque(
+                        @Parameter(description = "Datos del bloque") @Valid @RequestBody CreateBloqueHorarioRequest request,
+                        HttpServletRequest httpRequest) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(bloqueHorarioService.createBloque(request, httpRequest));
+        }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Actualizar bloque", description = "Actualiza los datos de un bloque existente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Bloque actualizado",
-                    content = @Content(schema = @Schema(implementation = BloqueHorarioResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Bloque no encontrado", content = @Content)
-    })
-    public ResponseEntity<BloqueHorarioResponse> updateBloque(
-            @Parameter(description = "ID del bloque") @PathVariable String id,
-            @Parameter(description = "Datos a actualizar") @Valid @RequestBody UpdateBloqueHorarioRequest request) {
-        return ResponseEntity.ok(bloqueHorarioService.updateBloque(id, request));
-    }
+        @PutMapping("/{id}")
+        @Operation(summary = "Actualizar bloque", description = "Actualiza los datos de un bloque existente")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Bloque actualizado", content = @Content(schema = @Schema(implementation = BloqueHorarioResponse.class))),
+                        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content),
+                        @ApiResponse(responseCode = "404", description = "Bloque no encontrado", content = @Content)
+        })
+        public ResponseEntity<BloqueHorarioResponse> updateBloque(
+                        @Parameter(description = "ID del bloque") @PathVariable String id,
+                        @Parameter(description = "Datos a actualizar") @Valid @RequestBody UpdateBloqueHorarioRequest request,
+                        HttpServletRequest httpRequest) {
+                return ResponseEntity.ok(bloqueHorarioService.updateBloque(id, request, httpRequest));
+        }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar bloque (soft delete)", description = "Elimina lógicamente un bloque de horario")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Bloque eliminado"),
-            @ApiResponse(responseCode = "404", description = "Bloque no encontrado", content = @Content)
-    })
-    public ResponseEntity<Void> deleteBloque(
-            @Parameter(description = "ID del bloque") @PathVariable String id) {
-        bloqueHorarioService.deleteBloque(id);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{id}")
+        @Operation(summary = "Eliminar bloque (soft delete)", description = "Elimina lógicamente un bloque de horario")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "204", description = "Bloque eliminado"),
+                        @ApiResponse(responseCode = "404", description = "Bloque no encontrado", content = @Content)
+        })
+        public ResponseEntity<Void> deleteBloque(
+                        @Parameter(description = "ID del bloque") @PathVariable String id,
+                        HttpServletRequest httpRequest) {
+                bloqueHorarioService.deleteBloque(id, httpRequest);
+                return ResponseEntity.noContent().build();
+        }
 
-    @DeleteMapping("/{id}/permanent")
-    @Operation(summary = "Eliminar bloque permanentemente", description = "Elimina completamente un bloque")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Bloque eliminado permanentemente"),
-            @ApiResponse(responseCode = "404", description = "Bloque no encontrado", content = @Content)
-    })
-    public ResponseEntity<Void> permanentDeleteBloque(
-            @Parameter(description = "ID del bloque") @PathVariable String id) {
-        bloqueHorarioService.permanentDeleteBloque(id);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{id}/permanent")
+        @Operation(summary = "Eliminar bloque permanentemente", description = "Elimina completamente un bloque")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "204", description = "Bloque eliminado permanentemente"),
+                        @ApiResponse(responseCode = "404", description = "Bloque no encontrado", content = @Content)
+        })
+        public ResponseEntity<Void> permanentDeleteBloque(
+                        @Parameter(description = "ID del bloque") @PathVariable String id) {
+                bloqueHorarioService.permanentDeleteBloque(id);
+                return ResponseEntity.noContent().build();
+        }
 
-    @PatchMapping("/{id}/restore")
-    @Operation(summary = "Restaurar bloque", description = "Restaura un bloque eliminado lógicamente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Bloque restaurado",
-                    content = @Content(schema = @Schema(implementation = BloqueHorarioResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Bloque no encontrado", content = @Content)
-    })
-    public ResponseEntity<BloqueHorarioResponse> restoreBloque(
-            @Parameter(description = "ID del bloque") @PathVariable String id) {
-        return ResponseEntity.ok(bloqueHorarioService.restoreBloque(id));
-    }
+        @PatchMapping("/{id}/restore")
+        @Operation(summary = "Restaurar bloque", description = "Restaura un bloque eliminado lógicamente")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Bloque restaurado", content = @Content(schema = @Schema(implementation = BloqueHorarioResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Bloque no encontrado", content = @Content)
+        })
+        public ResponseEntity<BloqueHorarioResponse> restoreBloque(
+                        @Parameter(description = "ID del bloque") @PathVariable String id) {
+                return ResponseEntity.ok(bloqueHorarioService.restoreBloque(id));
+        }
 }

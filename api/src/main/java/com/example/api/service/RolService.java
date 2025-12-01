@@ -3,6 +3,14 @@ package com.example.api.service;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +32,8 @@ public class RolService {
 
     private final RolRepository rolRepository;
     private final RolMapper rolMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
@@ -31,9 +41,13 @@ public class RolService {
      * @param rolRepository Repositorio de roles
      * @param rolMapper     Mapper de roles
      */
-    public RolService(RolRepository rolRepository, RolMapper rolMapper) {
+    public RolService(RolRepository rolRepository, RolMapper rolMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.rolRepository = rolRepository;
         this.rolMapper = rolMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -102,7 +116,7 @@ public class RolService {
      * @return El rol creado
      * @throws DuplicateResourceException si ya existe un rol con ese nombre
      */
-    public RolResponse createRol(CreateRolRequest request) {
+    public RolResponse createRol(CreateRolRequest request, HttpServletRequest httpRequest) {
         // Validar que no exista un rol con el mismo nombre
         if (rolRepository.existsByNombreAndIdNot(request.nombre(), null)) {
             throw new DuplicateResourceException("Rol", "nombre", request.nombre());
@@ -111,6 +125,10 @@ public class RolService {
         Rol rol = rolMapper.toEntity(request);
 
         Rol savedRol = rolRepository.save(rol);
+
+        // Audit Log
+        logRolAction("CREATE", savedRol, httpRequest);
+
         return rolMapper.toResponse(savedRol);
     }
 
@@ -123,7 +141,7 @@ public class RolService {
      * @throws ResourceNotFoundException  si el rol no existe
      * @throws DuplicateResourceException si el nuevo nombre ya existe
      */
-    public RolResponse updateRol(String id, UpdateRolRequest request) {
+    public RolResponse updateRol(String id, UpdateRolRequest request, HttpServletRequest httpRequest) {
         Rol rol = rolRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol", "id", id));
 
@@ -144,6 +162,10 @@ public class RolService {
         rolMapper.updateEntityFromDto(request, rol);
 
         Rol updatedRol = rolRepository.save(rol);
+
+        // Audit Log
+        logRolAction("UPDATE", updatedRol, httpRequest);
+
         return rolMapper.toResponse(updatedRol);
     }
 
@@ -153,7 +175,7 @@ public class RolService {
      * @param id El ID del rol a eliminar
      * @throws ResourceNotFoundException si el rol no existe
      */
-    public void softDeleteRol(String id) {
+    public void softDeleteRol(String id, HttpServletRequest httpRequest) {
         Rol rol = rolRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Rol", "id", id));
 
@@ -163,6 +185,9 @@ public class RolService {
 
         rol.softDelete();
         rolRepository.save(rol);
+
+        // Audit Log
+        logRolAction("DELETE", rol, httpRequest);
     }
 
     /**
@@ -182,6 +207,30 @@ public class RolService {
         rol.restore();
         Rol restoredRol = rolRepository.save(rol);
         return rolMapper.toResponse(restoredRol);
+    }
+
+    private void logRolAction(String action, Rol rol, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("rolId", rol.getId());
+            bodyMap.put("nombre", rol.getNombre());
+            bodyMap.put("descripcion", rol.getDescripcion());
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**

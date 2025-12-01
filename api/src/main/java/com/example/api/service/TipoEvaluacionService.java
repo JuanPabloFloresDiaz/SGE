@@ -3,6 +3,13 @@ package com.example.api.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,14 +34,20 @@ public class TipoEvaluacionService {
 
     private final TipoEvaluacionRepository tipoEvaluacionRepository;
     private final TipoEvaluacionMapper tipoEvaluacionMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
     public TipoEvaluacionService(TipoEvaluacionRepository tipoEvaluacionRepository,
-            TipoEvaluacionMapper tipoEvaluacionMapper) {
+            TipoEvaluacionMapper tipoEvaluacionMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.tipoEvaluacionRepository = tipoEvaluacionRepository;
         this.tipoEvaluacionMapper = tipoEvaluacionMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -90,35 +103,48 @@ public class TipoEvaluacionService {
     /**
      * Crea un nuevo tipo de evaluación.
      */
-    public TipoEvaluacionResponse createTipoEvaluacion(CreateTipoEvaluacionRequest request) {
+    public TipoEvaluacionResponse createTipoEvaluacion(CreateTipoEvaluacionRequest request,
+            HttpServletRequest httpRequest) {
         TipoEvaluacion tipoEvaluacion = tipoEvaluacionMapper.toEntity(request);
         // Peso eliminado de la entidad
 
         TipoEvaluacion saved = tipoEvaluacionRepository.save(tipoEvaluacion);
+
+        // Audit Log
+        logTipoEvaluacionAction("CREATE", saved, httpRequest);
+
         return tipoEvaluacionMapper.toResponse(saved);
     }
 
     /**
      * Actualiza un tipo de evaluación existente.
      */
-    public TipoEvaluacionResponse updateTipoEvaluacion(String id, UpdateTipoEvaluacionRequest request) {
+    public TipoEvaluacionResponse updateTipoEvaluacion(String id, UpdateTipoEvaluacionRequest request,
+            HttpServletRequest httpRequest) {
         TipoEvaluacion tipoEvaluacion = tipoEvaluacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de evaluación no encontrado con ID: " + id));
 
         tipoEvaluacionMapper.updateEntityFromDto(request, tipoEvaluacion);
 
         TipoEvaluacion updated = tipoEvaluacionRepository.save(tipoEvaluacion);
+
+        // Audit Log
+        logTipoEvaluacionAction("UPDATE", updated, httpRequest);
+
         return tipoEvaluacionMapper.toResponse(updated);
     }
 
     /**
      * Elimina lógicamente un tipo de evaluación (soft delete).
      */
-    public void deleteTipoEvaluacion(String id) {
+    public void deleteTipoEvaluacion(String id, HttpServletRequest httpRequest) {
         TipoEvaluacion tipoEvaluacion = tipoEvaluacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Tipo de evaluación no encontrado con ID: " + id));
         tipoEvaluacion.setDeletedAt(LocalDateTime.now());
         tipoEvaluacionRepository.save(tipoEvaluacion);
+
+        // Audit Log
+        logTipoEvaluacionAction("DELETE", tipoEvaluacion, httpRequest);
     }
 
     /**
@@ -139,5 +165,28 @@ public class TipoEvaluacionService {
         tipoEvaluacion.setDeletedAt(null);
         TipoEvaluacion restored = tipoEvaluacionRepository.save(tipoEvaluacion);
         return tipoEvaluacionMapper.toResponse(restored);
+    }
+
+    private void logTipoEvaluacionAction(String action, TipoEvaluacion tipoEvaluacion, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("tipoEvaluacionId", tipoEvaluacion.getId());
+            bodyMap.put("nombre", tipoEvaluacion.getNombre());
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

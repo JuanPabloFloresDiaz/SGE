@@ -2,6 +2,13 @@ package com.example.api.service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,6 +38,8 @@ public class UsuarioService {
     private final RolRepository rolRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final UsuarioMapper usuarioMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
@@ -40,11 +49,15 @@ public class UsuarioService {
      * @param usuarioMapper     Mapper de usuarios
      */
     public UsuarioService(UsuarioRepository usuarioRepository, RolRepository rolRepository,
-            UsuarioMapper usuarioMapper) {
+            UsuarioMapper usuarioMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.usuarioRepository = usuarioRepository;
         this.rolRepository = rolRepository;
         this.passwordEncoder = new BCryptPasswordEncoder();
         this.usuarioMapper = usuarioMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -200,7 +213,7 @@ public class UsuarioService {
      *                                    email
      * @throws ResourceNotFoundException  si el rol no existe
      */
-    public UsuarioResponse createUsuario(CreateUsuarioRequest request) {
+    public UsuarioResponse createUsuario(CreateUsuarioRequest request, HttpServletRequest httpRequest) {
         // Validar que no exista un usuario con el mismo username
         if (usuarioRepository.existsByUsernameAndIdNot(request.username(), null)) {
             throw new DuplicateResourceException("Ya existe un usuario con el username: " + request.username());
@@ -225,6 +238,10 @@ public class UsuarioService {
         usuario.setRol(rol);
 
         Usuario savedUsuario = usuarioRepository.save(usuario);
+
+        // Audit Log
+        logUsuarioAction("CREATE", savedUsuario, httpRequest);
+
         return usuarioMapper.toResponse(savedUsuario);
     }
 
@@ -237,7 +254,7 @@ public class UsuarioService {
      * @throws ResourceNotFoundException  si el usuario o rol no existe
      * @throws DuplicateResourceException si el nuevo username o email ya existe
      */
-    public UsuarioResponse updateUsuario(String id, UpdateUsuarioRequest request) {
+    public UsuarioResponse updateUsuario(String id, UpdateUsuarioRequest request, HttpServletRequest httpRequest) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
 
@@ -280,6 +297,10 @@ public class UsuarioService {
         }
 
         Usuario updatedUsuario = usuarioRepository.save(usuario);
+
+        // Audit Log
+        logUsuarioAction("UPDATE", updatedUsuario, httpRequest);
+
         return usuarioMapper.toResponse(updatedUsuario);
     }
 
@@ -289,7 +310,7 @@ public class UsuarioService {
      * @param id El ID del usuario a eliminar
      * @throws ResourceNotFoundException si el usuario no existe
      */
-    public void softDeleteUsuario(String id) {
+    public void softDeleteUsuario(String id, HttpServletRequest httpRequest) {
         Usuario usuario = usuarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario", "id", id));
 
@@ -299,6 +320,9 @@ public class UsuarioService {
 
         usuario.softDelete();
         usuarioRepository.save(usuario);
+
+        // Audit Log
+        logUsuarioAction("DELETE", usuario, httpRequest);
     }
 
     /**
@@ -319,6 +343,33 @@ public class UsuarioService {
         usuario.restore();
         Usuario restoredUsuario = usuarioRepository.save(usuario);
         return usuarioMapper.toResponse(restoredUsuario);
+    }
+
+    private void logUsuarioAction(String action, Usuario usuario, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("usuarioId", usuario.getId());
+            bodyMap.put("username", usuario.getUsername());
+            bodyMap.put("email", usuario.getEmail());
+            if (usuario.getRol() != null) {
+                bodyMap.put("rolId", usuario.getRol().getId());
+            }
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**

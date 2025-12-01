@@ -2,6 +2,8 @@ package com.example.api.controller;
 
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -40,122 +42,115 @@ import jakarta.validation.Valid;
 @Tag(name = "Tipos de Evaluación", description = "API para gestión de tipos de evaluación del sistema educativo")
 public class TipoEvaluacionController {
 
-    private final TipoEvaluacionService tipoEvaluacionService;
+        private final TipoEvaluacionService tipoEvaluacionService;
 
-    public TipoEvaluacionController(TipoEvaluacionService tipoEvaluacionService) {
-        this.tipoEvaluacionService = tipoEvaluacionService;
-    }
+        public TipoEvaluacionController(TipoEvaluacionService tipoEvaluacionService) {
+                this.tipoEvaluacionService = tipoEvaluacionService;
+        }
 
-    @GetMapping
-    @Operation(summary = "Listar todos los tipos de evaluación", description = "Obtiene una lista paginada de todos los tipos de evaluación activos")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de tipos de evaluación obtenida exitosamente",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
-    })
-    public ResponseEntity<Page<TipoEvaluacionResponse>> getAllTiposEvaluacion(
-            @Parameter(description = "Número de página (inicia en 0)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Tamaño de página", example = "20")
-            @RequestParam(defaultValue = "20") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(tipoEvaluacionService.getAllTiposEvaluacion(pageable));
-    }
+        @GetMapping
+        @Operation(summary = "Listar todos los tipos de evaluación", description = "Obtiene una lista paginada de todos los tipos de evaluación activos")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista de tipos de evaluación obtenida exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = Page.class)))
+        })
+        public ResponseEntity<Page<TipoEvaluacionResponse>> getAllTiposEvaluacion(
+                        @Parameter(description = "Número de página (inicia en 0)", example = "0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Tamaño de página", example = "20") @RequestParam(defaultValue = "20") int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(tipoEvaluacionService.getAllTiposEvaluacion(pageable));
+        }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Obtener tipo de evaluación por ID", description = "Obtiene un tipo de evaluación específico por su identificador único")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Tipo de evaluación encontrado",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TipoEvaluacionResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Tipo de evaluación no encontrado")
-    })
-    public ResponseEntity<TipoEvaluacionResponse> getTipoEvaluacionById(
-            @Parameter(description = "ID del tipo de evaluación") @PathVariable String id) {
-        return ResponseEntity.ok(tipoEvaluacionService.getTipoEvaluacionById(id));
-    }
+        @GetMapping("/{id}")
+        @Operation(summary = "Obtener tipo de evaluación por ID", description = "Obtiene un tipo de evaluación específico por su identificador único")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Tipo de evaluación encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TipoEvaluacionResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Tipo de evaluación no encontrado")
+        })
+        public ResponseEntity<TipoEvaluacionResponse> getTipoEvaluacionById(
+                        @Parameter(description = "ID del tipo de evaluación") @PathVariable String id) {
+                return ResponseEntity.ok(tipoEvaluacionService.getTipoEvaluacionById(id));
+        }
 
-    @GetMapping("/search")
-    @Operation(summary = "Buscar tipo de evaluación por nombre", 
-               description = "Busca un tipo de evaluación por su nombre usando búsqueda secuencial (apropiada para listas pequeñas)")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Tipo de evaluación encontrado",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TipoEvaluacionResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Tipo de evaluación no encontrado")
-    })
-    public ResponseEntity<TipoEvaluacionResponse> searchByNombre(
-            @Parameter(description = "Nombre del tipo de evaluación a buscar") @RequestParam String nombre) {
-        return ResponseEntity.ok(tipoEvaluacionService.searchByNombre(nombre));
-    }
+        @GetMapping("/search")
+        @Operation(summary = "Buscar tipo de evaluación por nombre", description = "Busca un tipo de evaluación por su nombre usando búsqueda secuencial (apropiada para listas pequeñas)")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Tipo de evaluación encontrado", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TipoEvaluacionResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Tipo de evaluación no encontrado")
+        })
+        public ResponseEntity<TipoEvaluacionResponse> searchByNombre(
+                        @Parameter(description = "Nombre del tipo de evaluación a buscar") @RequestParam String nombre) {
+                return ResponseEntity.ok(tipoEvaluacionService.searchByNombre(nombre));
+        }
 
-    @GetMapping("/deleted")
-    @Operation(summary = "Listar tipos de evaluación eliminados", description = "Obtiene una lista de todos los tipos de evaluación eliminados (soft delete)")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de tipos de evaluación eliminados obtenida exitosamente",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = List.class)))
-    })
-    public ResponseEntity<List<TipoEvaluacionResponse>> getTiposEvaluacionDeleted() {
-        return ResponseEntity.ok(tipoEvaluacionService.getTiposEvaluacionDeleted());
-    }
+        @GetMapping("/deleted")
+        @Operation(summary = "Listar tipos de evaluación eliminados", description = "Obtiene una lista de todos los tipos de evaluación eliminados (soft delete)")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista de tipos de evaluación eliminados obtenida exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = List.class)))
+        })
+        public ResponseEntity<List<TipoEvaluacionResponse>> getTiposEvaluacionDeleted() {
+                return ResponseEntity.ok(tipoEvaluacionService.getTiposEvaluacionDeleted());
+        }
 
-    @PostMapping
-    @Operation(summary = "Crear nuevo tipo de evaluación", description = "Crea un nuevo tipo de evaluación en el sistema")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Tipo de evaluación creado exitosamente",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TipoEvaluacionResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
-    })
-    public ResponseEntity<TipoEvaluacionResponse> createTipoEvaluacion(
-            @Valid @RequestBody CreateTipoEvaluacionRequest request) {
-        TipoEvaluacionResponse created = tipoEvaluacionService.createTipoEvaluacion(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
+        @PostMapping
+        @Operation(summary = "Crear nuevo tipo de evaluación", description = "Crea un nuevo tipo de evaluación en el sistema")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "201", description = "Tipo de evaluación creado exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TipoEvaluacionResponse.class))),
+                        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
+        })
+        public ResponseEntity<TipoEvaluacionResponse> createTipoEvaluacion(
+                        @Valid @RequestBody CreateTipoEvaluacionRequest request,
+                        HttpServletRequest httpRequest) {
+                TipoEvaluacionResponse created = tipoEvaluacionService.createTipoEvaluacion(request, httpRequest);
+                return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Actualizar tipo de evaluación", description = "Actualiza un tipo de evaluación existente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Tipo de evaluación actualizado exitosamente",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TipoEvaluacionResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Tipo de evaluación no encontrado"),
-            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
-    })
-    public ResponseEntity<TipoEvaluacionResponse> updateTipoEvaluacion(
-            @Parameter(description = "ID del tipo de evaluación") @PathVariable String id,
-            @Valid @RequestBody UpdateTipoEvaluacionRequest request) {
-        return ResponseEntity.ok(tipoEvaluacionService.updateTipoEvaluacion(id, request));
-    }
+        @PutMapping("/{id}")
+        @Operation(summary = "Actualizar tipo de evaluación", description = "Actualiza un tipo de evaluación existente")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Tipo de evaluación actualizado exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TipoEvaluacionResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Tipo de evaluación no encontrado"),
+                        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos")
+        })
+        public ResponseEntity<TipoEvaluacionResponse> updateTipoEvaluacion(
+                        @Parameter(description = "ID del tipo de evaluación") @PathVariable String id,
+                        @Valid @RequestBody UpdateTipoEvaluacionRequest request,
+                        HttpServletRequest httpRequest) {
+                return ResponseEntity.ok(tipoEvaluacionService.updateTipoEvaluacion(id, request, httpRequest));
+        }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar tipo de evaluación (soft delete)", description = "Realiza una eliminación lógica del tipo de evaluación")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Tipo de evaluación eliminado exitosamente"),
-            @ApiResponse(responseCode = "404", description = "Tipo de evaluación no encontrado")
-    })
-    public ResponseEntity<Void> deleteTipoEvaluacion(
-            @Parameter(description = "ID del tipo de evaluación") @PathVariable String id) {
-        tipoEvaluacionService.deleteTipoEvaluacion(id);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{id}")
+        @Operation(summary = "Eliminar tipo de evaluación (soft delete)", description = "Realiza una eliminación lógica del tipo de evaluación")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "204", description = "Tipo de evaluación eliminado exitosamente"),
+                        @ApiResponse(responseCode = "404", description = "Tipo de evaluación no encontrado")
+        })
+        public ResponseEntity<Void> deleteTipoEvaluacion(
+                        @Parameter(description = "ID del tipo de evaluación") @PathVariable String id,
+                        HttpServletRequest httpRequest) {
+                tipoEvaluacionService.deleteTipoEvaluacion(id, httpRequest);
+                return ResponseEntity.noContent().build();
+        }
 
-    @DeleteMapping("/{id}/permanent")
-    @Operation(summary = "Eliminar tipo de evaluación permanentemente", description = "Elimina definitivamente un tipo de evaluación de la base de datos")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Tipo de evaluación eliminado permanentemente"),
-            @ApiResponse(responseCode = "404", description = "Tipo de evaluación no encontrado")
-    })
-    public ResponseEntity<Void> permanentDeleteTipoEvaluacion(
-            @Parameter(description = "ID del tipo de evaluación") @PathVariable String id) {
-        tipoEvaluacionService.permanentDeleteTipoEvaluacion(id);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{id}/permanent")
+        @Operation(summary = "Eliminar tipo de evaluación permanentemente", description = "Elimina definitivamente un tipo de evaluación de la base de datos")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "204", description = "Tipo de evaluación eliminado permanentemente"),
+                        @ApiResponse(responseCode = "404", description = "Tipo de evaluación no encontrado")
+        })
+        public ResponseEntity<Void> permanentDeleteTipoEvaluacion(
+                        @Parameter(description = "ID del tipo de evaluación") @PathVariable String id) {
+                tipoEvaluacionService.permanentDeleteTipoEvaluacion(id);
+                return ResponseEntity.noContent().build();
+        }
 
-    @PatchMapping("/{id}/restore")
-    @Operation(summary = "Restaurar tipo de evaluación", description = "Restaura un tipo de evaluación previamente eliminado")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Tipo de evaluación restaurado exitosamente",
-                    content = @Content(mediaType = "application/json", schema = @Schema(implementation = TipoEvaluacionResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Tipo de evaluación no encontrado")
-    })
-    public ResponseEntity<TipoEvaluacionResponse> restoreTipoEvaluacion(
-            @Parameter(description = "ID del tipo de evaluación") @PathVariable String id) {
-        return ResponseEntity.ok(tipoEvaluacionService.restoreTipoEvaluacion(id));
-    }
+        @PatchMapping("/{id}/restore")
+        @Operation(summary = "Restaurar tipo de evaluación", description = "Restaura un tipo de evaluación previamente eliminado")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Tipo de evaluación restaurado exitosamente", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TipoEvaluacionResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Tipo de evaluación no encontrado")
+        })
+        public ResponseEntity<TipoEvaluacionResponse> restoreTipoEvaluacion(
+                        @Parameter(description = "ID del tipo de evaluación") @PathVariable String id) {
+                return ResponseEntity.ok(tipoEvaluacionService.restoreTipoEvaluacion(id));
+        }
 }

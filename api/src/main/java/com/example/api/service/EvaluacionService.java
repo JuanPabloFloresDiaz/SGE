@@ -5,6 +5,13 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -34,6 +41,8 @@ public class EvaluacionService {
     private final CursoRepository cursoRepository;
     private final TipoEvaluacionRepository tipoEvaluacionRepository;
     private final EvaluacionMapper evaluacionMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
@@ -41,11 +50,15 @@ public class EvaluacionService {
     public EvaluacionService(EvaluacionRepository evaluacionRepository,
             CursoRepository cursoRepository,
             TipoEvaluacionRepository tipoEvaluacionRepository,
-            EvaluacionMapper evaluacionMapper) {
+            EvaluacionMapper evaluacionMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.evaluacionRepository = evaluacionRepository;
         this.cursoRepository = cursoRepository;
         this.tipoEvaluacionRepository = tipoEvaluacionRepository;
         this.evaluacionMapper = evaluacionMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -167,7 +180,7 @@ public class EvaluacionService {
     /**
      * Crea una nueva evaluación.
      */
-    public EvaluacionResponse createEvaluacion(CreateEvaluacionRequest request) {
+    public EvaluacionResponse createEvaluacion(CreateEvaluacionRequest request, HttpServletRequest httpRequest) {
         // Validar que el curso existe
         Curso curso = cursoRepository.findById(request.cursoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado con ID: " + request.cursoId()));
@@ -188,13 +201,18 @@ public class EvaluacionService {
         evaluacion.setDocumentoNombre(request.documentoNombre());
 
         Evaluacion saved = evaluacionRepository.save(evaluacion);
+
+        // Audit Log
+        logEvaluacionAction("CREATE", saved, httpRequest);
+
         return evaluacionMapper.toResponse(saved);
     }
 
     /**
      * Actualiza una evaluación existente.
      */
-    public EvaluacionResponse updateEvaluacion(String id, UpdateEvaluacionRequest request) {
+    public EvaluacionResponse updateEvaluacion(String id, UpdateEvaluacionRequest request,
+            HttpServletRequest httpRequest) {
         Evaluacion evaluacion = evaluacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Evaluación no encontrada con ID: " + id));
 
@@ -230,17 +248,24 @@ public class EvaluacionService {
         }
 
         Evaluacion updated = evaluacionRepository.save(evaluacion);
+
+        // Audit Log
+        logEvaluacionAction("UPDATE", updated, httpRequest);
+
         return evaluacionMapper.toResponse(updated);
     }
 
     /**
      * Elimina lógicamente una evaluación (soft delete).
      */
-    public void deleteEvaluacion(String id) {
+    public void deleteEvaluacion(String id, HttpServletRequest httpRequest) {
         Evaluacion evaluacion = evaluacionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Evaluación no encontrada con ID: " + id));
         evaluacion.setDeletedAt(LocalDateTime.now());
         evaluacionRepository.save(evaluacion);
+
+        // Audit Log
+        logEvaluacionAction("DELETE", evaluacion, httpRequest);
     }
 
     /**
@@ -261,5 +286,34 @@ public class EvaluacionService {
         evaluacion.setDeletedAt(null);
         Evaluacion restored = evaluacionRepository.save(evaluacion);
         return evaluacionMapper.toResponse(restored);
+    }
+
+    private void logEvaluacionAction(String action, Evaluacion evaluacion, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("evaluacionId", evaluacion.getId());
+            bodyMap.put("nombre", evaluacion.getNombre());
+            if (evaluacion.getCurso() != null) {
+                bodyMap.put("cursoId", evaluacion.getCurso().getId());
+            }
+            if (evaluacion.getTipoEvaluacion() != null) {
+                bodyMap.put("tipoEvaluacionId", evaluacion.getTipoEvaluacion().getId());
+            }
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

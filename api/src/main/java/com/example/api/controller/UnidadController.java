@@ -2,6 +2,8 @@ package com.example.api.controller;
 
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -40,120 +42,115 @@ import jakarta.validation.Valid;
 @Tag(name = "Unidades", description = "API para gestión de unidades didácticas del sistema educativo")
 public class UnidadController {
 
-    private final UnidadService unidadService;
+        private final UnidadService unidadService;
 
-    public UnidadController(UnidadService unidadService) {
-        this.unidadService = unidadService;
-    }
+        public UnidadController(UnidadService unidadService) {
+                this.unidadService = unidadService;
+        }
 
-    @GetMapping
-    @Operation(summary = "Listar unidades", description = "Obtiene una lista paginada de todas las unidades activas")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de unidades obtenida exitosamente",
-                    content = @Content(schema = @Schema(implementation = Page.class)))
-    })
-    public ResponseEntity<Page<UnidadResponse>> getAllUnidades(
-            @Parameter(description = "Número de página (inicia en 0)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Tamaño de página", example = "20")
-            @RequestParam(defaultValue = "20") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(unidadService.getAllUnidades(pageable));
-    }
+        @GetMapping
+        @Operation(summary = "Listar unidades", description = "Obtiene una lista paginada de todas las unidades activas")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista de unidades obtenida exitosamente", content = @Content(schema = @Schema(implementation = Page.class)))
+        })
+        public ResponseEntity<Page<UnidadResponse>> getAllUnidades(
+                        @Parameter(description = "Número de página (inicia en 0)", example = "0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Tamaño de página", example = "20") @RequestParam(defaultValue = "20") int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(unidadService.getAllUnidades(pageable));
+        }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Obtener unidad por ID", description = "Busca y retorna una unidad específica")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Unidad encontrada",
-                    content = @Content(schema = @Schema(implementation = UnidadResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Unidad no encontrada", content = @Content)
-    })
-    public ResponseEntity<UnidadResponse> getUnidadById(
-            @Parameter(description = "ID de la unidad") @PathVariable String id) {
-        return ResponseEntity.ok(unidadService.getUnidadById(id));
-    }
+        @GetMapping("/{id}")
+        @Operation(summary = "Obtener unidad por ID", description = "Busca y retorna una unidad específica")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Unidad encontrada", content = @Content(schema = @Schema(implementation = UnidadResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Unidad no encontrada", content = @Content)
+        })
+        public ResponseEntity<UnidadResponse> getUnidadById(
+                        @Parameter(description = "ID de la unidad") @PathVariable String id) {
+                return ResponseEntity.ok(unidadService.getUnidadById(id));
+        }
 
-    @GetMapping("/curso/{cursoId}")
-    @Operation(summary = "Unidades de un curso", description = "Obtiene todas las unidades de un curso específico ordenadas por número")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de unidades del curso",
-                    content = @Content(schema = @Schema(implementation = List.class)))
-    })
-    public ResponseEntity<List<UnidadResponse>> getUnidadesByCurso(
-            @Parameter(description = "ID del curso") @PathVariable String cursoId) {
-        return ResponseEntity.ok(unidadService.getUnidadesByCursoId(cursoId));
-    }
+        @GetMapping("/curso/{cursoId}")
+        @Operation(summary = "Unidades de un curso", description = "Obtiene todas las unidades de un curso específico ordenadas por número")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista de unidades del curso", content = @Content(schema = @Schema(implementation = List.class)))
+        })
+        public ResponseEntity<List<UnidadResponse>> getUnidadesByCurso(
+                        @Parameter(description = "ID del curso") @PathVariable String cursoId) {
+                return ResponseEntity.ok(unidadService.getUnidadesByCursoId(cursoId));
+        }
 
-    @GetMapping("/deleted")
-    @Operation(summary = "Listar unidades eliminadas", description = "Obtiene todas las unidades que han sido eliminadas lógicamente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de unidades eliminadas",
-                    content = @Content(schema = @Schema(implementation = List.class)))
-    })
-    public ResponseEntity<List<UnidadResponse>> getUnidadesDeleted() {
-        return ResponseEntity.ok(unidadService.getUnidadesDeleted());
-    }
+        @GetMapping("/deleted")
+        @Operation(summary = "Listar unidades eliminadas", description = "Obtiene todas las unidades que han sido eliminadas lógicamente")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista de unidades eliminadas", content = @Content(schema = @Schema(implementation = List.class)))
+        })
+        public ResponseEntity<List<UnidadResponse>> getUnidadesDeleted() {
+                return ResponseEntity.ok(unidadService.getUnidadesDeleted());
+        }
 
-    @PostMapping
-    @Operation(summary = "Crear unidad", description = "Crea una nueva unidad didáctica")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Unidad creada exitosamente",
-                    content = @Content(schema = @Schema(implementation = UnidadResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Curso no encontrado", content = @Content)
-    })
-    public ResponseEntity<UnidadResponse> createUnidad(@Valid @RequestBody CreateUnidadRequest request) {
-        UnidadResponse created = unidadService.createUnidad(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
+        @PostMapping
+        @Operation(summary = "Crear unidad", description = "Crea una nueva unidad didáctica")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "201", description = "Unidad creada exitosamente", content = @Content(schema = @Schema(implementation = UnidadResponse.class))),
+                        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = @Content),
+                        @ApiResponse(responseCode = "404", description = "Curso no encontrado", content = @Content)
+        })
+        public ResponseEntity<UnidadResponse> createUnidad(
+                        @Valid @RequestBody CreateUnidadRequest request,
+                        HttpServletRequest httpRequest) {
+                UnidadResponse created = unidadService.createUnidad(request, httpRequest);
+                return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Actualizar unidad", description = "Actualiza los datos de una unidad existente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Unidad actualizada exitosamente",
-                    content = @Content(schema = @Schema(implementation = UnidadResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Unidad no encontrada", content = @Content),
-            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = @Content)
-    })
-    public ResponseEntity<UnidadResponse> updateUnidad(
-            @Parameter(description = "ID de la unidad") @PathVariable String id,
-            @Valid @RequestBody UpdateUnidadRequest request) {
-        return ResponseEntity.ok(unidadService.updateUnidad(id, request));
-    }
+        @PutMapping("/{id}")
+        @Operation(summary = "Actualizar unidad", description = "Actualiza los datos de una unidad existente")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Unidad actualizada exitosamente", content = @Content(schema = @Schema(implementation = UnidadResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Unidad no encontrada", content = @Content),
+                        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = @Content)
+        })
+        public ResponseEntity<UnidadResponse> updateUnidad(
+                        @Parameter(description = "ID de la unidad") @PathVariable String id,
+                        @Valid @RequestBody UpdateUnidadRequest request,
+                        HttpServletRequest httpRequest) {
+                return ResponseEntity.ok(unidadService.updateUnidad(id, request, httpRequest));
+        }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar unidad (soft delete)", description = "Realiza una eliminación lógica de la unidad")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Unidad eliminada exitosamente"),
-            @ApiResponse(responseCode = "404", description = "Unidad no encontrada", content = @Content)
-    })
-    public ResponseEntity<Void> deleteUnidad(
-            @Parameter(description = "ID de la unidad") @PathVariable String id) {
-        unidadService.deleteUnidad(id);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{id}")
+        @Operation(summary = "Eliminar unidad (soft delete)", description = "Realiza una eliminación lógica de la unidad")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "204", description = "Unidad eliminada exitosamente"),
+                        @ApiResponse(responseCode = "404", description = "Unidad no encontrada", content = @Content)
+        })
+        public ResponseEntity<Void> deleteUnidad(
+                        @Parameter(description = "ID de la unidad") @PathVariable String id,
+                        HttpServletRequest httpRequest) {
+                unidadService.deleteUnidad(id, httpRequest);
+                return ResponseEntity.noContent().build();
+        }
 
-    @DeleteMapping("/{id}/permanent")
-    @Operation(summary = "Eliminar unidad permanentemente", description = "Elimina permanentemente una unidad de la base de datos")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Unidad eliminada permanentemente"),
-            @ApiResponse(responseCode = "404", description = "Unidad no encontrada", content = @Content)
-    })
-    public ResponseEntity<Void> permanentDeleteUnidad(
-            @Parameter(description = "ID de la unidad") @PathVariable String id) {
-        unidadService.permanentDeleteUnidad(id);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{id}/permanent")
+        @Operation(summary = "Eliminar unidad permanentemente", description = "Elimina permanentemente una unidad de la base de datos")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "204", description = "Unidad eliminada permanentemente"),
+                        @ApiResponse(responseCode = "404", description = "Unidad no encontrada", content = @Content)
+        })
+        public ResponseEntity<Void> permanentDeleteUnidad(
+                        @Parameter(description = "ID de la unidad") @PathVariable String id) {
+                unidadService.permanentDeleteUnidad(id);
+                return ResponseEntity.noContent().build();
+        }
 
-    @PatchMapping("/{id}/restore")
-    @Operation(summary = "Restaurar unidad eliminada", description = "Restaura una unidad que fue eliminada lógicamente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Unidad restaurada exitosamente",
-                    content = @Content(schema = @Schema(implementation = UnidadResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Unidad no encontrada", content = @Content)
-    })
-    public ResponseEntity<UnidadResponse> restoreUnidad(
-            @Parameter(description = "ID de la unidad") @PathVariable String id) {
-        return ResponseEntity.ok(unidadService.restoreUnidad(id));
-    }
+        @PatchMapping("/{id}/restore")
+        @Operation(summary = "Restaurar unidad eliminada", description = "Restaura una unidad que fue eliminada lógicamente")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Unidad restaurada exitosamente", content = @Content(schema = @Schema(implementation = UnidadResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Unidad no encontrada", content = @Content)
+        })
+        public ResponseEntity<UnidadResponse> restoreUnidad(
+                        @Parameter(description = "ID de la unidad") @PathVariable String id) {
+                return ResponseEntity.ok(unidadService.restoreUnidad(id));
+        }
 }

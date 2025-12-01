@@ -3,6 +3,13 @@ package com.example.api.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +37,8 @@ public class ProfesorService {
     private final ProfesorRepository profesorRepository;
     private final UsuarioRepository usuarioRepository;
     private final ProfesorMapper profesorMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
@@ -40,10 +49,14 @@ public class ProfesorService {
      */
     public ProfesorService(ProfesorRepository profesorRepository,
             UsuarioRepository usuarioRepository,
-            ProfesorMapper profesorMapper) {
+            ProfesorMapper profesorMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.profesorRepository = profesorRepository;
         this.usuarioRepository = usuarioRepository;
         this.profesorMapper = profesorMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -119,7 +132,7 @@ public class ProfesorService {
      * @return El profesor creado
      * @throws ResourceNotFoundException si el usuario no existe
      */
-    public ProfesorResponse createProfesor(CreateProfesorRequest request) {
+    public ProfesorResponse createProfesor(CreateProfesorRequest request, HttpServletRequest httpRequest) {
         // Verificar que el usuario existe
         Usuario usuario = usuarioRepository.findById(request.usuarioId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -131,6 +144,10 @@ public class ProfesorService {
 
         // Guardar
         Profesor profesorGuardado = profesorRepository.save(profesor);
+
+        // Audit Log
+        logProfesorAction("CREATE", profesorGuardado, httpRequest);
+
         return profesorMapper.toResponse(profesorGuardado);
     }
 
@@ -142,7 +159,7 @@ public class ProfesorService {
      * @return El profesor actualizado
      * @throws ResourceNotFoundException si el profesor no existe
      */
-    public ProfesorResponse updateProfesor(String id, UpdateProfesorRequest request) {
+    public ProfesorResponse updateProfesor(String id, UpdateProfesorRequest request, HttpServletRequest httpRequest) {
         Profesor profesor = profesorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Profesor no encontrado con ID: " + id));
 
@@ -150,6 +167,10 @@ public class ProfesorService {
         profesorMapper.updateEntityFromDto(request, profesor);
 
         Profesor profesorActualizado = profesorRepository.save(profesor);
+
+        // Audit Log
+        logProfesorAction("UPDATE", profesorActualizado, httpRequest);
+
         return profesorMapper.toResponse(profesorActualizado);
     }
 
@@ -159,13 +180,16 @@ public class ProfesorService {
      * @param id El ID del profesor a eliminar
      * @throws ResourceNotFoundException si el profesor no existe
      */
-    public void deleteProfesor(String id) {
+    public void deleteProfesor(String id, HttpServletRequest httpRequest) {
         Profesor profesor = profesorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Profesor no encontrado con ID: " + id));
 
         profesor.setDeletedAt(LocalDateTime.now());
         profesor.setActivo(false);
         profesorRepository.save(profesor);
+
+        // Audit Log
+        logProfesorAction("DELETE", profesor, httpRequest);
     }
 
     /**
@@ -196,5 +220,31 @@ public class ProfesorService {
         profesor.setActivo(true);
         Profesor profesorRestaurado = profesorRepository.save(profesor);
         return profesorMapper.toResponse(profesorRestaurado);
+    }
+
+    private void logProfesorAction(String action, Profesor profesor, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("profesorId", profesor.getId());
+            bodyMap.put("especialidad", profesor.getEspecialidad());
+            if (profesor.getUsuario() != null) {
+                bodyMap.put("usuarioId", profesor.getUsuario().getId());
+            }
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

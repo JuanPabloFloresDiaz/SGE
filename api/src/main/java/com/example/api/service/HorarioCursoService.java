@@ -3,6 +3,13 @@ package com.example.api.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,18 +42,25 @@ public class HorarioCursoService {
     private final CursoRepository cursoRepository;
     private final BloqueHorarioRepository bloqueHorarioRepository;
     private final HorarioCursoMapper horarioCursoMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
+
     public HorarioCursoService(HorarioCursoRepository horarioCursoRepository,
             CursoRepository cursoRepository,
             BloqueHorarioRepository bloqueHorarioRepository,
-            HorarioCursoMapper horarioCursoMapper) {
+            HorarioCursoMapper horarioCursoMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.horarioCursoRepository = horarioCursoRepository;
         this.cursoRepository = cursoRepository;
         this.bloqueHorarioRepository = bloqueHorarioRepository;
         this.horarioCursoMapper = horarioCursoMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -116,7 +130,7 @@ public class HorarioCursoService {
     /**
      * Crea un nuevo horario de curso.
      */
-    public HorarioCursoResponse createHorario(CreateHorarioCursoRequest request) {
+    public HorarioCursoResponse createHorario(CreateHorarioCursoRequest request, HttpServletRequest httpRequest) {
         // Validar que el curso existe
         Curso curso = cursoRepository.findById(request.cursoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado con ID: " + request.cursoId()));
@@ -139,13 +153,18 @@ public class HorarioCursoService {
         }
 
         HorarioCurso savedHorario = horarioCursoRepository.save(horario);
+
+        // Audit Log
+        logHorarioCursoAction("CREATE", savedHorario, httpRequest);
+
         return horarioCursoMapper.toResponse(savedHorario);
     }
 
     /**
      * Actualiza un horario de curso existente.
      */
-    public HorarioCursoResponse updateHorario(String id, UpdateHorarioCursoRequest request) {
+    public HorarioCursoResponse updateHorario(String id, UpdateHorarioCursoRequest request,
+            HttpServletRequest httpRequest) {
         HorarioCurso horario = horarioCursoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Horario de curso no encontrado con ID: " + id));
 
@@ -183,17 +202,53 @@ public class HorarioCursoService {
         }
 
         HorarioCurso updatedHorario = horarioCursoRepository.save(horario);
+
+        // Audit Log
+        logHorarioCursoAction("UPDATE", updatedHorario, httpRequest);
+
         return horarioCursoMapper.toResponse(updatedHorario);
     }
 
     /**
      * Elimina lógicamente un horario (soft delete).
      */
-    public void deleteHorario(String id) {
+    public void deleteHorario(String id, HttpServletRequest httpRequest) {
         HorarioCurso horario = horarioCursoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Horario de curso no encontrado con ID: " + id));
         horario.setDeletedAt(LocalDateTime.now());
         horarioCursoRepository.save(horario);
+
+        // Audit Log
+        logHorarioCursoAction("DELETE", horario, httpRequest);
+    }
+
+    private void logHorarioCursoAction(String action, HorarioCurso horario, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("horarioId", horario.getId());
+            bodyMap.put("dia", horario.getDia());
+            if (horario.getCurso() != null) {
+                bodyMap.put("cursoId", horario.getCurso().getId());
+            }
+            if (horario.getBloqueHorario() != null) {
+                bodyMap.put("bloqueId", horario.getBloqueHorario().getId());
+            }
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**

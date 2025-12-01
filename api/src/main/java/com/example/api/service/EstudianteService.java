@@ -2,6 +2,13 @@ package com.example.api.service;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +37,8 @@ public class EstudianteService {
     private final EstudianteRepository estudianteRepository;
     private final UsuarioRepository usuarioRepository;
     private final EstudianteMapper estudianteMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
@@ -40,10 +49,14 @@ public class EstudianteService {
      */
     public EstudianteService(EstudianteRepository estudianteRepository,
             UsuarioRepository usuarioRepository,
-            EstudianteMapper estudianteMapper) {
+            EstudianteMapper estudianteMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.estudianteRepository = estudianteRepository;
         this.usuarioRepository = usuarioRepository;
         this.estudianteMapper = estudianteMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -121,7 +134,7 @@ public class EstudianteService {
      * @throws ResourceNotFoundException  si el usuario no existe
      * @throws DuplicateResourceException si el código ya existe
      */
-    public EstudianteResponse createEstudiante(CreateEstudianteRequest request) {
+    public EstudianteResponse createEstudiante(CreateEstudianteRequest request, HttpServletRequest httpRequest) {
         // Verificar que el usuario existe
         Usuario usuario = usuarioRepository.findById(request.usuarioId())
                 .orElseThrow(
@@ -138,6 +151,10 @@ public class EstudianteService {
         estudiante.setUsuario(usuario);
 
         Estudiante guardado = estudianteRepository.save(estudiante);
+
+        // Audit Log
+        logEstudianteAction("CREATE", guardado, httpRequest);
+
         return estudianteMapper.toResponse(guardado);
     }
 
@@ -150,7 +167,8 @@ public class EstudianteService {
      * @throws ResourceNotFoundException  si el estudiante no existe
      * @throws DuplicateResourceException si el nuevo código ya existe
      */
-    public EstudianteResponse updateEstudiante(String id, UpdateEstudianteRequest request) {
+    public EstudianteResponse updateEstudiante(String id, UpdateEstudianteRequest request,
+            HttpServletRequest httpRequest) {
         Estudiante estudiante = estudianteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con ID: " + id));
 
@@ -168,6 +186,10 @@ public class EstudianteService {
         estudianteMapper.updateEntityFromDto(request, estudiante);
 
         Estudiante actualizado = estudianteRepository.save(estudiante);
+
+        // Audit Log
+        logEstudianteAction("UPDATE", actualizado, httpRequest);
+
         return estudianteMapper.toResponse(actualizado);
     }
 
@@ -177,12 +199,15 @@ public class EstudianteService {
      * @param id ID del estudiante a eliminar
      * @throws ResourceNotFoundException si el estudiante no existe
      */
-    public void deleteEstudiante(String id) {
+    public void deleteEstudiante(String id, HttpServletRequest httpRequest) {
         Estudiante estudiante = estudianteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Estudiante no encontrado con ID: " + id));
 
         estudiante.setActivo(false);
         estudianteRepository.save(estudiante);
+
+        // Audit Log
+        logEstudianteAction("DELETE", estudiante, httpRequest);
     }
 
     /**
@@ -197,5 +222,31 @@ public class EstudianteService {
         }
 
         estudianteRepository.deleteById(id);
+    }
+
+    private void logEstudianteAction(String action, Estudiante estudiante, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("estudianteId", estudiante.getId());
+            bodyMap.put("codigoEstudiante", estudiante.getCodigoEstudiante());
+            if (estudiante.getUsuario() != null) {
+                bodyMap.put("usuarioId", estudiante.getUsuario().getId());
+            }
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

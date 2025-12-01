@@ -4,6 +4,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,6 +35,8 @@ public class PeriodoService {
 
     private final PeriodoRepository periodoRepository;
     private final PeriodoMapper periodoMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
@@ -35,9 +44,14 @@ public class PeriodoService {
      * @param periodoRepository Repositorio de periodos
      * @param periodoMapper     Mapper de periodos
      */
-    public PeriodoService(PeriodoRepository periodoRepository, PeriodoMapper periodoMapper) {
+    public PeriodoService(PeriodoRepository periodoRepository,
+            PeriodoMapper periodoMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.periodoRepository = periodoRepository;
         this.periodoMapper = periodoMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -126,7 +140,7 @@ public class PeriodoService {
      * @param request Datos del periodo a crear
      * @return El periodo creado
      */
-    public PeriodoResponse createPeriodo(CreatePeriodoRequest request) {
+    public PeriodoResponse createPeriodo(CreatePeriodoRequest request, HttpServletRequest httpRequest) {
         // Validar que fechaFin sea posterior a fechaInicio
         if (request.fechaFin().isBefore(request.fechaInicio())) {
             throw new IllegalArgumentException("La fecha de fin debe ser posterior a la fecha de inicio");
@@ -137,6 +151,10 @@ public class PeriodoService {
 
         // Guardar
         Periodo periodoGuardado = periodoRepository.save(periodo);
+
+        // Audit Log
+        logPeriodoAction("CREATE", periodoGuardado, httpRequest);
+
         return periodoMapper.toResponse(periodoGuardado);
     }
 
@@ -148,7 +166,7 @@ public class PeriodoService {
      * @return El periodo actualizado
      * @throws ResourceNotFoundException si el periodo no existe
      */
-    public PeriodoResponse updatePeriodo(String id, UpdatePeriodoRequest request) {
+    public PeriodoResponse updatePeriodo(String id, UpdatePeriodoRequest request, HttpServletRequest httpRequest) {
         Periodo periodo = periodoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Periodo no encontrado con ID: " + id));
 
@@ -170,6 +188,10 @@ public class PeriodoService {
         }
 
         Periodo periodoActualizado = periodoRepository.save(periodo);
+
+        // Audit Log
+        logPeriodoAction("UPDATE", periodoActualizado, httpRequest);
+
         return periodoMapper.toResponse(periodoActualizado);
     }
 
@@ -179,13 +201,16 @@ public class PeriodoService {
      * @param id El ID del periodo a eliminar
      * @throws ResourceNotFoundException si el periodo no existe
      */
-    public void deletePeriodo(String id) {
+    public void deletePeriodo(String id, HttpServletRequest httpRequest) {
         Periodo periodo = periodoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Periodo no encontrado con ID: " + id));
 
         periodo.setDeletedAt(LocalDateTime.now());
         periodo.setActivo(false);
         periodoRepository.save(periodo);
+
+        // Audit Log
+        logPeriodoAction("DELETE", periodo, httpRequest);
     }
 
     /**
@@ -216,5 +241,30 @@ public class PeriodoService {
         periodo.setActivo(true);
         Periodo periodoRestaurado = periodoRepository.save(periodo);
         return periodoMapper.toResponse(periodoRestaurado);
+    }
+
+    private void logPeriodoAction(String action, Periodo periodo, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("periodoId", periodo.getId());
+            bodyMap.put("nombre", periodo.getNombre());
+            bodyMap.put("fechaInicio", periodo.getFechaInicio().toString());
+            bodyMap.put("fechaFin", periodo.getFechaFin().toString());
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

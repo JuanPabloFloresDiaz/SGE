@@ -6,6 +6,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,6 +47,8 @@ public class ReporteService {
     private final CursoRepository cursoRepository;
     private final UsuarioRepository usuarioRepository;
     private final ReporteMapper reporteMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     // Cola FIFO para procesamiento de reportes
     private final Queue<Map<String, Object>> colaGeneracionReportes = new LinkedList<>();
@@ -52,12 +60,16 @@ public class ReporteService {
             EstudianteRepository estudianteRepository,
             CursoRepository cursoRepository,
             UsuarioRepository usuarioRepository,
-            ReporteMapper reporteMapper) {
+            ReporteMapper reporteMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.reporteRepository = reporteRepository;
         this.estudianteRepository = estudianteRepository;
         this.cursoRepository = cursoRepository;
         this.usuarioRepository = usuarioRepository;
         this.reporteMapper = reporteMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -162,7 +174,7 @@ public class ReporteService {
 
                 try {
                     // Crear el reporte
-                    ReporteResponse reporte = createReporte(request);
+                    ReporteResponse reporte = createReporte(request, null);
                     idsCreados.add(reporte.id());
                     procesados++;
                 } catch (Exception e) {
@@ -205,7 +217,7 @@ public class ReporteService {
     /**
      * Crea un nuevo reporte.
      */
-    public ReporteResponse createReporte(CreateReporteRequest request) {
+    public ReporteResponse createReporte(CreateReporteRequest request, HttpServletRequest httpRequest) {
         // Validar que el estudiante existe
         Estudiante estudiante = estudianteRepository.findById(request.estudianteId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -235,13 +247,17 @@ public class ReporteService {
         }
 
         Reporte saved = reporteRepository.save(reporte);
+
+        // Audit Log
+        logReporteAction("CREATE", saved, httpRequest);
+
         return reporteMapper.toResponse(saved);
     }
 
     /**
      * Actualiza un reporte existente.
      */
-    public ReporteResponse updateReporte(String id, UpdateReporteRequest request) {
+    public ReporteResponse updateReporte(String id, UpdateReporteRequest request, HttpServletRequest httpRequest) {
         Reporte reporte = reporteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reporte no encontrado con ID: " + id));
 
@@ -270,17 +286,54 @@ public class ReporteService {
         }
 
         Reporte updated = reporteRepository.save(reporte);
+
+        // Audit Log
+        logReporteAction("UPDATE", updated, httpRequest);
+
         return reporteMapper.toResponse(updated);
     }
 
     /**
      * Elimina lógicamente un reporte (soft delete).
      */
-    public void deleteReporte(String id) {
+    public void deleteReporte(String id, HttpServletRequest httpRequest) {
         Reporte reporte = reporteRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Reporte no encontrado con ID: " + id));
         reporte.setDeletedAt(LocalDateTime.now());
         reporteRepository.save(reporte);
+
+        // Audit Log
+        logReporteAction("DELETE", reporte, httpRequest);
+    }
+
+    private void logReporteAction(String action, Reporte reporte, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request != null ? request.getRequestURI() : "UNKNOWN");
+            log.setIpAddress(request != null ? request.getRemoteAddr() : "UNKNOWN");
+            log.setDevice(request != null ? request.getHeader("User-Agent") : "UNKNOWN");
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("reporteId", reporte.getId());
+            bodyMap.put("titulo", reporte.getTitulo());
+            bodyMap.put("tipo", reporte.getTipo());
+            if (reporte.getEstudiante() != null) {
+                bodyMap.put("estudianteId", reporte.getEstudiante().getId());
+            }
+            if (reporte.getCurso() != null) {
+                bodyMap.put("cursoId", reporte.getCurso().getId());
+            }
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**

@@ -3,6 +3,13 @@ package com.example.api.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,16 +36,22 @@ public class UnidadService {
     private final UnidadRepository unidadRepository;
     private final CursoRepository cursoRepository;
     private final UnidadMapper unidadMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
     public UnidadService(UnidadRepository unidadRepository,
             CursoRepository cursoRepository,
-            UnidadMapper unidadMapper) {
+            UnidadMapper unidadMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.unidadRepository = unidadRepository;
         this.cursoRepository = cursoRepository;
         this.unidadMapper = unidadMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -83,7 +96,7 @@ public class UnidadService {
     /**
      * Crea una nueva unidad.
      */
-    public UnidadResponse createUnidad(CreateUnidadRequest request) {
+    public UnidadResponse createUnidad(CreateUnidadRequest request, HttpServletRequest httpRequest) {
         // Validar que el curso existe
         Curso curso = cursoRepository.findById(request.cursoId())
                 .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado con ID: " + request.cursoId()));
@@ -92,30 +105,41 @@ public class UnidadService {
         unidad.setCurso(curso);
 
         Unidad savedUnidad = unidadRepository.save(unidad);
+
+        // Audit Log
+        logUnidadAction("CREATE", savedUnidad, httpRequest);
+
         return unidadMapper.toResponse(savedUnidad);
     }
 
     /**
      * Actualiza una unidad existente.
      */
-    public UnidadResponse updateUnidad(String id, UpdateUnidadRequest request) {
+    public UnidadResponse updateUnidad(String id, UpdateUnidadRequest request, HttpServletRequest httpRequest) {
         Unidad unidad = unidadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Unidad no encontrada con ID: " + id));
 
         unidadMapper.updateEntityFromDto(request, unidad);
 
         Unidad updatedUnidad = unidadRepository.save(unidad);
+
+        // Audit Log
+        logUnidadAction("UPDATE", updatedUnidad, httpRequest);
+
         return unidadMapper.toResponse(updatedUnidad);
     }
 
     /**
      * Elimina lógicamente una unidad (soft delete).
      */
-    public void deleteUnidad(String id) {
+    public void deleteUnidad(String id, HttpServletRequest httpRequest) {
         Unidad unidad = unidadRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Unidad no encontrada con ID: " + id));
         unidad.setDeletedAt(LocalDateTime.now());
         unidadRepository.save(unidad);
+
+        // Audit Log
+        logUnidadAction("DELETE", unidad, httpRequest);
     }
 
     /**
@@ -136,5 +160,32 @@ public class UnidadService {
         unidad.setDeletedAt(null);
         Unidad restoredUnidad = unidadRepository.save(unidad);
         return unidadMapper.toResponse(restoredUnidad);
+    }
+
+    private void logUnidadAction(String action, Unidad unidad, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("unidadId", unidad.getId());
+            bodyMap.put("titulo", unidad.getTitulo());
+            bodyMap.put("numero", unidad.getNumero());
+            if (unidad.getCurso() != null) {
+                bodyMap.put("cursoId", unidad.getCurso().getId());
+            }
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

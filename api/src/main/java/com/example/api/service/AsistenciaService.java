@@ -6,6 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -38,6 +43,8 @@ public class AsistenciaService {
         private final EstudianteRepository estudianteRepository;
         private final UsuarioRepository usuarioRepository;
         private final AsistenciaMapper asistenciaMapper;
+        private final AuditProducer auditProducer;
+        private final ObjectMapper objectMapper;
 
         /**
          * Constructor con inyección de dependencias.
@@ -46,12 +53,16 @@ public class AsistenciaService {
                         ClaseRepository claseRepository,
                         EstudianteRepository estudianteRepository,
                         UsuarioRepository usuarioRepository,
-                        AsistenciaMapper asistenciaMapper) {
+                        AsistenciaMapper asistenciaMapper,
+                        AuditProducer auditProducer,
+                        ObjectMapper objectMapper) {
                 this.asistenciaRepository = asistenciaRepository;
                 this.claseRepository = claseRepository;
                 this.estudianteRepository = estudianteRepository;
                 this.usuarioRepository = usuarioRepository;
                 this.asistenciaMapper = asistenciaMapper;
+                this.auditProducer = auditProducer;
+                this.objectMapper = objectMapper;
         }
 
         /**
@@ -148,7 +159,7 @@ public class AsistenciaService {
         /**
          * Crea una nueva asistencia.
          */
-        public AsistenciaResponse createAsistencia(CreateAsistenciaRequest request) {
+        public AsistenciaResponse createAsistencia(CreateAsistenciaRequest request, HttpServletRequest httpRequest) {
                 // Validar que la clase existe
                 Clase clase = claseRepository.findById(request.claseId())
                                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -177,13 +188,18 @@ public class AsistenciaService {
                                 request.registradoAt() != null ? request.registradoAt() : LocalDateTime.now());
 
                 Asistencia savedAsistencia = asistenciaRepository.save(asistencia);
+
+                // Audit Log
+                logAsistenciaAction("CREATE", savedAsistencia, httpRequest);
+
                 return asistenciaMapper.toResponse(savedAsistencia);
         }
 
         /**
          * Actualiza una asistencia existente.
          */
-        public AsistenciaResponse updateAsistencia(String id, UpdateAsistenciaRequest request) {
+        public AsistenciaResponse updateAsistencia(String id, UpdateAsistenciaRequest request,
+                        HttpServletRequest httpRequest) {
                 Asistencia asistencia = asistenciaRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Asistencia no encontrada con ID: " + id));
@@ -210,18 +226,54 @@ public class AsistenciaService {
                 }
 
                 Asistencia updatedAsistencia = asistenciaRepository.save(asistencia);
+
+                // Audit Log
+                logAsistenciaAction("UPDATE", updatedAsistencia, httpRequest);
+
                 return asistenciaMapper.toResponse(updatedAsistencia);
         }
 
         /**
          * Elimina lógicamente una asistencia (soft delete).
          */
-        public void deleteAsistencia(String id) {
+        public void deleteAsistencia(String id, HttpServletRequest httpRequest) {
                 Asistencia asistencia = asistenciaRepository.findById(id)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Asistencia no encontrada con ID: " + id));
                 asistencia.setDeletedAt(LocalDateTime.now());
                 asistenciaRepository.save(asistencia);
+
+                // Audit Log
+                logAsistenciaAction("DELETE", asistencia, httpRequest);
+        }
+
+        private void logAsistenciaAction(String action, Asistencia asistencia, HttpServletRequest request) {
+                try {
+                        AuditLogDTO log = new AuditLogDTO();
+                        log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+                        log.setAction(action);
+                        log.setEndpoint(request.getRequestURI());
+                        log.setIpAddress(request.getRemoteAddr());
+                        log.setDevice(request.getHeader("User-Agent"));
+                        log.setTimestamp(java.time.Instant.now());
+
+                        Map<String, Object> bodyMap = new HashMap<>();
+                        bodyMap.put("asistenciaId", asistencia.getId());
+                        bodyMap.put("estado", asistencia.getEstado());
+                        if (asistencia.getClase() != null) {
+                                bodyMap.put("claseId", asistencia.getClase().getId());
+                        }
+                        if (asistencia.getEstudiante() != null) {
+                                bodyMap.put("estudianteId", asistencia.getEstudiante().getId());
+                        }
+
+                        log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+                        auditProducer.sendAuditLog(log);
+                } catch (Exception e) {
+                        System.err.println("Error sending audit log: " + e.getMessage());
+                        e.printStackTrace();
+                }
         }
 
         /**

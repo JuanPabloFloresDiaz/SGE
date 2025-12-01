@@ -6,6 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -37,20 +42,26 @@ public class CursoService {
     private final ProfesorRepository profesorRepository;
     private final PeriodoRepository periodoRepository;
     private final CursoMapper cursoMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
      */
     public CursoService(CursoRepository cursoRepository,
+            PeriodoRepository periodoRepository,
             AsignaturaRepository asignaturaRepository,
             ProfesorRepository profesorRepository,
-            PeriodoRepository periodoRepository,
-            CursoMapper cursoMapper) {
+            CursoMapper cursoMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.cursoRepository = cursoRepository;
+        this.periodoRepository = periodoRepository;
         this.asignaturaRepository = asignaturaRepository;
         this.profesorRepository = profesorRepository;
-        this.periodoRepository = periodoRepository;
         this.cursoMapper = cursoMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -168,7 +179,7 @@ public class CursoService {
     /**
      * Crea un nuevo curso.
      */
-    public CursoResponse createCurso(CreateCursoRequest request) {
+    public CursoResponse createCurso(CreateCursoRequest request, HttpServletRequest httpRequest) {
         // Verificar que la asignatura existe
         Asignatura asignatura = asignaturaRepository.findById(request.asignaturaId())
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -195,13 +206,17 @@ public class CursoService {
 
         // Guardar
         Curso cursoGuardado = cursoRepository.save(curso);
+
+        // Audit Log
+        logCursoAction("CREATE", cursoGuardado, httpRequest);
+
         return cursoMapper.toResponse(cursoGuardado);
     }
 
     /**
      * Actualiza un curso existente.
      */
-    public CursoResponse updateCurso(String id, UpdateCursoRequest request) {
+    public CursoResponse updateCurso(String id, UpdateCursoRequest request, HttpServletRequest httpRequest) {
         Curso curso = cursoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado con ID: " + id));
 
@@ -235,18 +250,25 @@ public class CursoService {
         }
 
         Curso cursoActualizado = cursoRepository.save(curso);
+
+        // Audit Log
+        logCursoAction("UPDATE", cursoActualizado, httpRequest);
+
         return cursoMapper.toResponse(cursoActualizado);
     }
 
     /**
      * Realiza eliminación suave de un curso.
      */
-    public void deleteCurso(String id) {
+    public void deleteCurso(String id, HttpServletRequest httpRequest) {
         Curso curso = cursoRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Curso no encontrado con ID: " + id));
 
         curso.setDeletedAt(LocalDateTime.now());
         cursoRepository.save(curso);
+
+        // Audit Log
+        logCursoAction("DELETE", curso, httpRequest);
     }
 
     /**
@@ -269,5 +291,34 @@ public class CursoService {
         curso.setDeletedAt(null);
         Curso cursoRestaurado = cursoRepository.save(curso);
         return cursoMapper.toResponse(cursoRestaurado);
+    }
+
+    private void logCursoAction(String action, Curso curso, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("cursoId", curso.getId());
+            bodyMap.put("nombreGrupo", curso.getNombreGrupo());
+            if (curso.getAsignatura() != null) {
+                bodyMap.put("asignaturaId", curso.getAsignatura().getId());
+            }
+            if (curso.getPeriodo() != null) {
+                bodyMap.put("periodoId", curso.getPeriodo().getId());
+            }
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }

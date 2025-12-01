@@ -3,6 +3,8 @@ package com.example.api.controller;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -49,7 +51,8 @@ public class FileUploadController {
             @Parameter(description = "Categoría donde se guardará el archivo", required = true, schema = @Schema(type = "string", allowableValues = {
                     "ACTIVIDADES", "ESTUDIANTES", "CURSOS", "ASIGNATURAS", "CLASES", "UNIDADES", "TEMAS",
                     "EVALUACIONES", "PROFESORES", "USUARIOS", "MATERIALES",
-                    "OTROS" }, example = "ACTIVIDADES")) @RequestParam("category") String categoryStr) {
+                    "OTROS" }, example = "ACTIVIDADES")) @RequestParam("category") String categoryStr,
+            HttpServletRequest httpRequest) {
 
         try {
             // Convertir string a enum
@@ -64,7 +67,7 @@ public class FileUploadController {
             }
 
             // Guardar archivo
-            String filePath = storageService.storeFile(file, category);
+            String filePath = storageService.storeFile(file, category, httpRequest);
 
             // Construir URL de acceso (en este caso, retornamos la misma key de S3)
             String fileUrl = filePath;
@@ -91,10 +94,11 @@ public class FileUploadController {
             @ApiResponse(responseCode = "404", description = "Archivo no encontrado")
     })
     public ResponseEntity<Map<String, String>> deleteFile(
-            @Parameter(description = "Path relativo del archivo", example = "actividades/abc123.jpg", required = true) @RequestParam("filePath") String filePath) {
+            @Parameter(description = "Path relativo del archivo", example = "actividades/abc123.jpg", required = true) @RequestParam("filePath") String filePath,
+            HttpServletRequest httpRequest) {
 
         try {
-            boolean deleted = storageService.deleteFile(filePath);
+            boolean deleted = storageService.deleteFile(filePath, httpRequest);
 
             Map<String, String> response = new HashMap<>();
             if (deleted) {

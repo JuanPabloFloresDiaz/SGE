@@ -2,6 +2,8 @@ package com.example.api.controller;
 
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
@@ -41,141 +43,134 @@ import jakarta.validation.Valid;
 @Tag(name = "Horarios Curso", description = "API para gestión de horarios de cursos del sistema educativo")
 public class HorarioCursoController {
 
-    private final HorarioCursoService horarioCursoService;
+        private final HorarioCursoService horarioCursoService;
 
-    public HorarioCursoController(HorarioCursoService horarioCursoService) {
-        this.horarioCursoService = horarioCursoService;
-    }
+        public HorarioCursoController(HorarioCursoService horarioCursoService) {
+                this.horarioCursoService = horarioCursoService;
+        }
 
-    @GetMapping
-    @Operation(summary = "Listar horarios de curso", description = "Obtiene una lista paginada de todos los horarios activos")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de horarios obtenida exitosamente",
-                    content = @Content(schema = @Schema(implementation = Page.class)))
-    })
-    public ResponseEntity<Page<HorarioCursoResponse>> getAllHorarios(
-            @Parameter(description = "Número de página (inicia en 0)", example = "0")
-            @RequestParam(defaultValue = "0") int page,
-            @Parameter(description = "Tamaño de página", example = "20")
-            @RequestParam(defaultValue = "20") int size) {
-        Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(horarioCursoService.getAllHorarios(pageable));
-    }
+        @GetMapping
+        @Operation(summary = "Listar horarios de curso", description = "Obtiene una lista paginada de todos los horarios activos")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista de horarios obtenida exitosamente", content = @Content(schema = @Schema(implementation = Page.class)))
+        })
+        public ResponseEntity<Page<HorarioCursoResponse>> getAllHorarios(
+                        @Parameter(description = "Número de página (inicia en 0)", example = "0") @RequestParam(defaultValue = "0") int page,
+                        @Parameter(description = "Tamaño de página", example = "20") @RequestParam(defaultValue = "20") int size) {
+                Pageable pageable = PageRequest.of(page, size);
+                return ResponseEntity.ok(horarioCursoService.getAllHorarios(pageable));
+        }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Obtener horario por ID", description = "Busca y retorna un horario de curso específico")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Horario encontrado",
-                    content = @Content(schema = @Schema(implementation = HorarioCursoResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Horario no encontrado", content = @Content)
-    })
-    public ResponseEntity<HorarioCursoResponse> getHorarioById(
-            @Parameter(description = "ID del horario") @PathVariable String id) {
-        return ResponseEntity.ok(horarioCursoService.getHorarioById(id));
-    }
+        @GetMapping("/{id}")
+        @Operation(summary = "Obtener horario por ID", description = "Busca y retorna un horario de curso específico")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Horario encontrado", content = @Content(schema = @Schema(implementation = HorarioCursoResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Horario no encontrado", content = @Content)
+        })
+        public ResponseEntity<HorarioCursoResponse> getHorarioById(
+                        @Parameter(description = "ID del horario") @PathVariable String id) {
+                return ResponseEntity.ok(horarioCursoService.getHorarioById(id));
+        }
 
-    @GetMapping("/curso/{cursoId}")
-    @Operation(summary = "Horarios de un curso", description = "Obtiene todos los horarios de un curso específico")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de horarios del curso",
-                    content = @Content(schema = @Schema(implementation = List.class)))
-    })
-    public ResponseEntity<List<HorarioCursoResponse>> getHorariosByCurso(
-            @Parameter(description = "ID del curso") @PathVariable String cursoId) {
-        return ResponseEntity.ok(horarioCursoService.getHorariosByCursoId(cursoId));
-    }
+        @GetMapping("/curso/{cursoId}")
+        @Operation(summary = "Horarios de un curso", description = "Obtiene todos los horarios de un curso específico")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista de horarios del curso", content = @Content(schema = @Schema(implementation = List.class)))
+        })
+        public ResponseEntity<List<HorarioCursoResponse>> getHorariosByCurso(
+                        @Parameter(description = "ID del curso") @PathVariable String cursoId) {
+                return ResponseEntity.ok(horarioCursoService.getHorariosByCursoId(cursoId));
+        }
 
-    @GetMapping("/dia/{dia}")
-    @Operation(summary = "Horarios por día", description = "Obtiene todos los horarios de un día de la semana")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de horarios del día",
-                    content = @Content(schema = @Schema(implementation = List.class)))
-    })
-    public ResponseEntity<List<HorarioCursoResponse>> getHorariosByDia(
-            @Parameter(description = "Día de la semana", example = "LUN") @PathVariable DiaSemana dia) {
-        return ResponseEntity.ok(horarioCursoService.getHorariosByDia(dia));
-    }
+        @GetMapping("/dia/{dia}")
+        @Operation(summary = "Horarios por día", description = "Obtiene todos los horarios de un día de la semana")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista de horarios del día", content = @Content(schema = @Schema(implementation = List.class)))
+        })
+        public ResponseEntity<List<HorarioCursoResponse>> getHorariosByDia(
+                        @Parameter(description = "Día de la semana", example = "LUN") @PathVariable DiaSemana dia) {
+                return ResponseEntity.ok(horarioCursoService.getHorariosByDia(dia));
+        }
 
-    @GetMapping("/conflictos")
-    @Operation(summary = "Detectar conflictos", description = "Detecta horarios que se solapan en el mismo día, bloque y aula")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de conflictos detectados",
-                    content = @Content(schema = @Schema(implementation = List.class)))
-    })
-    public ResponseEntity<List<HorarioCursoResponse>> getConflictos() {
-        return ResponseEntity.ok(horarioCursoService.getConflictos());
-    }
+        @GetMapping("/conflictos")
+        @Operation(summary = "Detectar conflictos", description = "Detecta horarios que se solapan en el mismo día, bloque y aula")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista de conflictos detectados", content = @Content(schema = @Schema(implementation = List.class)))
+        })
+        public ResponseEntity<List<HorarioCursoResponse>> getConflictos() {
+                return ResponseEntity.ok(horarioCursoService.getConflictos());
+        }
 
-    @GetMapping("/deleted")
-    @Operation(summary = "Listar horarios eliminados", description = "Obtiene horarios eliminados lógicamente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Lista de horarios eliminados",
-                    content = @Content(schema = @Schema(implementation = List.class)))
-    })
-    public ResponseEntity<List<HorarioCursoResponse>> getHorariosDeleted() {
-        return ResponseEntity.ok(horarioCursoService.getHorariosDeleted());
-    }
+        @GetMapping("/deleted")
+        @Operation(summary = "Listar horarios eliminados", description = "Obtiene horarios eliminados lógicamente")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Lista de horarios eliminados", content = @Content(schema = @Schema(implementation = List.class)))
+        })
+        public ResponseEntity<List<HorarioCursoResponse>> getHorariosDeleted() {
+                return ResponseEntity.ok(horarioCursoService.getHorariosDeleted());
+        }
 
-    @PostMapping
-    @Operation(summary = "Crear horario de curso", description = "Registra un nuevo horario en el sistema")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Horario creado exitosamente",
-                    content = @Content(schema = @Schema(implementation = HorarioCursoResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos o horario duplicado", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Curso o bloque de horario no encontrado", content = @Content)
-    })
-    public ResponseEntity<HorarioCursoResponse> createHorario(
-            @Parameter(description = "Datos del horario") @Valid @RequestBody CreateHorarioCursoRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(horarioCursoService.createHorario(request));
-    }
+        @PostMapping
+        @Operation(summary = "Crear horario de curso", description = "Registra un nuevo horario en el sistema")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "201", description = "Horario creado exitosamente", content = @Content(schema = @Schema(implementation = HorarioCursoResponse.class))),
+                        @ApiResponse(responseCode = "400", description = "Datos inválidos o horario duplicado", content = @Content),
+                        @ApiResponse(responseCode = "404", description = "Curso o bloque de horario no encontrado", content = @Content)
+        })
+        public ResponseEntity<HorarioCursoResponse> createHorario(
+                        @Parameter(description = "Datos del horario") @Valid @RequestBody CreateHorarioCursoRequest request,
+                        HttpServletRequest httpRequest) {
+                return ResponseEntity.status(HttpStatus.CREATED)
+                                .body(horarioCursoService.createHorario(request, httpRequest));
+        }
 
-    @PutMapping("/{id}")
-    @Operation(summary = "Actualizar horario", description = "Actualiza los datos de un horario existente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Horario actualizado",
-                    content = @Content(schema = @Schema(implementation = HorarioCursoResponse.class))),
-            @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content),
-            @ApiResponse(responseCode = "404", description = "Horario, curso o bloque no encontrado", content = @Content)
-    })
-    public ResponseEntity<HorarioCursoResponse> updateHorario(
-            @Parameter(description = "ID del horario") @PathVariable String id,
-            @Parameter(description = "Datos a actualizar") @Valid @RequestBody UpdateHorarioCursoRequest request) {
-        return ResponseEntity.ok(horarioCursoService.updateHorario(id, request));
-    }
+        @PutMapping("/{id}")
+        @Operation(summary = "Actualizar horario", description = "Actualiza los datos de un horario existente")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Horario actualizado", content = @Content(schema = @Schema(implementation = HorarioCursoResponse.class))),
+                        @ApiResponse(responseCode = "400", description = "Datos inválidos", content = @Content),
+                        @ApiResponse(responseCode = "404", description = "Horario, curso o bloque no encontrado", content = @Content)
+        })
+        public ResponseEntity<HorarioCursoResponse> updateHorario(
+                        @Parameter(description = "ID del horario") @PathVariable String id,
+                        @Parameter(description = "Datos a actualizar") @Valid @RequestBody UpdateHorarioCursoRequest request,
+                        HttpServletRequest httpRequest) {
+                return ResponseEntity.ok(horarioCursoService.updateHorario(id, request, httpRequest));
+        }
 
-    @DeleteMapping("/{id}")
-    @Operation(summary = "Eliminar horario (soft delete)", description = "Elimina lógicamente un horario de curso")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Horario eliminado"),
-            @ApiResponse(responseCode = "404", description = "Horario no encontrado", content = @Content)
-    })
-    public ResponseEntity<Void> deleteHorario(
-            @Parameter(description = "ID del horario") @PathVariable String id) {
-        horarioCursoService.deleteHorario(id);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{id}")
+        @Operation(summary = "Eliminar horario (soft delete)", description = "Elimina lógicamente un horario de curso")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "204", description = "Horario eliminado"),
+                        @ApiResponse(responseCode = "404", description = "Horario no encontrado", content = @Content)
+        })
+        public ResponseEntity<Void> deleteHorario(
+                        @Parameter(description = "ID del horario") @PathVariable String id,
+                        HttpServletRequest httpRequest) {
+                horarioCursoService.deleteHorario(id, httpRequest);
+                return ResponseEntity.noContent().build();
+        }
 
-    @DeleteMapping("/{id}/permanent")
-    @Operation(summary = "Eliminar horario permanentemente", description = "Elimina completamente un horario")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "204", description = "Horario eliminado permanentemente"),
-            @ApiResponse(responseCode = "404", description = "Horario no encontrado", content = @Content)
-    })
-    public ResponseEntity<Void> permanentDeleteHorario(
-            @Parameter(description = "ID del horario") @PathVariable String id) {
-        horarioCursoService.permanentDeleteHorario(id);
-        return ResponseEntity.noContent().build();
-    }
+        @DeleteMapping("/{id}/permanent")
+        @Operation(summary = "Eliminar horario permanentemente", description = "Elimina completamente un horario")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "204", description = "Horario eliminado permanentemente"),
+                        @ApiResponse(responseCode = "404", description = "Horario no encontrado", content = @Content)
+        })
+        public ResponseEntity<Void> permanentDeleteHorario(
+                        @Parameter(description = "ID del horario") @PathVariable String id) {
+                horarioCursoService.permanentDeleteHorario(id);
+                return ResponseEntity.noContent().build();
+        }
 
-    @PatchMapping("/{id}/restore")
-    @Operation(summary = "Restaurar horario", description = "Restaura un horario eliminado lógicamente")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Horario restaurado",
-                    content = @Content(schema = @Schema(implementation = HorarioCursoResponse.class))),
-            @ApiResponse(responseCode = "404", description = "Horario no encontrado", content = @Content)
-    })
-    public ResponseEntity<HorarioCursoResponse> restoreHorario(
-            @Parameter(description = "ID del horario") @PathVariable String id) {
-        return ResponseEntity.ok(horarioCursoService.restoreHorario(id));
-    }
+        @PatchMapping("/{id}/restore")
+        @Operation(summary = "Restaurar horario", description = "Restaura un horario eliminado lógicamente")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Horario restaurado", content = @Content(schema = @Schema(implementation = HorarioCursoResponse.class))),
+                        @ApiResponse(responseCode = "404", description = "Horario no encontrado", content = @Content)
+        })
+        public ResponseEntity<HorarioCursoResponse> restoreHorario(
+                        @Parameter(description = "ID del horario") @PathVariable String id) {
+                return ResponseEntity.ok(horarioCursoService.restoreHorario(id));
+        }
 }

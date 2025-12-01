@@ -3,6 +3,13 @@ package com.example.api.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,6 +34,8 @@ public class BloqueHorarioService {
 
     private final BloqueHorarioRepository bloqueHorarioRepository;
     private final BloqueHorarioMapper bloqueHorarioMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
@@ -35,9 +44,13 @@ public class BloqueHorarioService {
      * @param bloqueHorarioMapper     Mapper de bloques de horario
      */
     public BloqueHorarioService(BloqueHorarioRepository bloqueHorarioRepository,
-            BloqueHorarioMapper bloqueHorarioMapper) {
+            BloqueHorarioMapper bloqueHorarioMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.bloqueHorarioRepository = bloqueHorarioRepository;
         this.bloqueHorarioMapper = bloqueHorarioMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -101,7 +114,7 @@ public class BloqueHorarioService {
      * @throws IllegalArgumentException si la hora de fin es anterior o igual a la
      *                                  hora de inicio
      */
-    public BloqueHorarioResponse createBloque(CreateBloqueHorarioRequest request) {
+    public BloqueHorarioResponse createBloque(CreateBloqueHorarioRequest request, HttpServletRequest httpRequest) {
         // Validar que la hora de fin sea posterior a la hora de inicio
         if (request.fin().isBefore(request.inicio()) || request.fin().equals(request.inicio())) {
             throw new IllegalArgumentException("La hora de fin debe ser posterior a la hora de inicio");
@@ -110,6 +123,10 @@ public class BloqueHorarioService {
         BloqueHorario bloque = bloqueHorarioMapper.toEntity(request);
 
         BloqueHorario savedBloque = bloqueHorarioRepository.save(bloque);
+
+        // Audit Log
+        logBloqueHorarioAction("CREATE", savedBloque, httpRequest);
+
         return bloqueHorarioMapper.toResponse(savedBloque);
     }
 
@@ -123,7 +140,8 @@ public class BloqueHorarioService {
      * @throws IllegalArgumentException  si la hora de fin es anterior o igual a la
      *                                   hora de inicio
      */
-    public BloqueHorarioResponse updateBloque(String id, UpdateBloqueHorarioRequest request) {
+    public BloqueHorarioResponse updateBloque(String id, UpdateBloqueHorarioRequest request,
+            HttpServletRequest httpRequest) {
         BloqueHorario bloque = bloqueHorarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bloque de horario no encontrado con ID: " + id));
 
@@ -135,6 +153,10 @@ public class BloqueHorarioService {
         }
 
         BloqueHorario updatedBloque = bloqueHorarioRepository.save(bloque);
+
+        // Audit Log
+        logBloqueHorarioAction("UPDATE", updatedBloque, httpRequest);
+
         return bloqueHorarioMapper.toResponse(updatedBloque);
     }
 
@@ -144,11 +166,39 @@ public class BloqueHorarioService {
      * @param id El ID del bloque a eliminar
      * @throws ResourceNotFoundException si el bloque no existe
      */
-    public void deleteBloque(String id) {
+    public void deleteBloque(String id, HttpServletRequest httpRequest) {
         BloqueHorario bloque = bloqueHorarioRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Bloque de horario no encontrado con ID: " + id));
         bloque.setDeletedAt(LocalDateTime.now());
         bloqueHorarioRepository.save(bloque);
+
+        // Audit Log
+        logBloqueHorarioAction("DELETE", bloque, httpRequest);
+    }
+
+    private void logBloqueHorarioAction(String action, BloqueHorario bloque, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("bloqueId", bloque.getId());
+            bodyMap.put("nombre", bloque.getNombre());
+            bodyMap.put("inicio", bloque.getInicio());
+            bodyMap.put("fin", bloque.getFin());
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     /**

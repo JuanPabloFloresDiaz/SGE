@@ -3,6 +3,13 @@ package com.example.api.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import java.util.Map;
+
+import jakarta.servlet.http.HttpServletRequest;
+
+import com.example.api.dto.AuditLogDTO;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +33,8 @@ public class AsignaturaService {
 
     private final AsignaturaRepository asignaturaRepository;
     private final AsignaturaMapper asignaturaMapper;
+    private final AuditProducer auditProducer;
+    private final ObjectMapper objectMapper;
 
     /**
      * Constructor con inyección de dependencias.
@@ -33,9 +42,14 @@ public class AsignaturaService {
      * @param asignaturaRepository Repositorio de asignaturas
      * @param asignaturaMapper     Mapper de asignaturas
      */
-    public AsignaturaService(AsignaturaRepository asignaturaRepository, AsignaturaMapper asignaturaMapper) {
+    public AsignaturaService(AsignaturaRepository asignaturaRepository,
+            AsignaturaMapper asignaturaMapper,
+            AuditProducer auditProducer,
+            ObjectMapper objectMapper) {
         this.asignaturaRepository = asignaturaRepository;
         this.asignaturaMapper = asignaturaMapper;
+        this.auditProducer = auditProducer;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -112,7 +126,7 @@ public class AsignaturaService {
      * @return La asignatura creada
      * @throws IllegalArgumentException si el código ya existe
      */
-    public AsignaturaResponse createAsignatura(CreateAsignaturaRequest request) {
+    public AsignaturaResponse createAsignatura(CreateAsignaturaRequest request, HttpServletRequest httpRequest) {
         // Verificar que el código no exista
         if (asignaturaRepository.existsByCodigo(request.codigo())) {
             throw new IllegalArgumentException("Ya existe una asignatura con el código: " + request.codigo());
@@ -123,6 +137,10 @@ public class AsignaturaService {
 
         // Guardar
         Asignatura asignaturaGuardada = asignaturaRepository.save(asignatura);
+
+        // Audit Log
+        logAsignaturaAction("CREATE", asignaturaGuardada, httpRequest);
+
         return asignaturaMapper.toResponse(asignaturaGuardada);
     }
 
@@ -135,7 +153,8 @@ public class AsignaturaService {
      * @throws ResourceNotFoundException si la asignatura no existe
      * @throws IllegalArgumentException  si el código ya existe
      */
-    public AsignaturaResponse updateAsignatura(String id, UpdateAsignaturaRequest request) {
+    public AsignaturaResponse updateAsignatura(String id, UpdateAsignaturaRequest request,
+            HttpServletRequest httpRequest) {
         Asignatura asignatura = asignaturaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Asignatura no encontrada con ID: " + id));
 
@@ -146,10 +165,14 @@ public class AsignaturaService {
                 throw new IllegalArgumentException("Ya existe una asignatura con el código: " + request.codigo());
             }
         }
-        
+
         asignaturaMapper.updateEntityFromDto(request, asignatura);
 
         Asignatura asignaturaActualizada = asignaturaRepository.save(asignatura);
+
+        // Audit Log
+        logAsignaturaAction("UPDATE", asignaturaActualizada, httpRequest);
+
         return asignaturaMapper.toResponse(asignaturaActualizada);
     }
 
@@ -159,12 +182,15 @@ public class AsignaturaService {
      * @param id El ID de la asignatura a eliminar
      * @throws ResourceNotFoundException si la asignatura no existe
      */
-    public void deleteAsignatura(String id) {
+    public void deleteAsignatura(String id, HttpServletRequest httpRequest) {
         Asignatura asignatura = asignaturaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Asignatura no encontrada con ID: " + id));
 
         asignatura.setDeletedAt(LocalDateTime.now());
         asignaturaRepository.save(asignatura);
+
+        // Audit Log
+        logAsignaturaAction("DELETE", asignatura, httpRequest);
     }
 
     /**
@@ -194,5 +220,29 @@ public class AsignaturaService {
         asignatura.setDeletedAt(null);
         Asignatura asignaturaRestaurada = asignaturaRepository.save(asignatura);
         return asignaturaMapper.toResponse(asignaturaRestaurada);
+    }
+
+    private void logAsignaturaAction(String action, Asignatura asignatura, HttpServletRequest request) {
+        try {
+            AuditLogDTO log = new AuditLogDTO();
+            log.setUserId("SYSTEM_ADMIN"); // Hardcoded as requested
+            log.setAction(action);
+            log.setEndpoint(request.getRequestURI());
+            log.setIpAddress(request.getRemoteAddr());
+            log.setDevice(request.getHeader("User-Agent"));
+            log.setTimestamp(java.time.Instant.now());
+
+            Map<String, Object> bodyMap = new HashMap<>();
+            bodyMap.put("asignaturaId", asignatura.getId());
+            bodyMap.put("nombre", asignatura.getNombre());
+            bodyMap.put("codigo", asignatura.getCodigo());
+
+            log.setRequestBody(objectMapper.writeValueAsString(bodyMap));
+
+            auditProducer.sendAuditLog(log);
+        } catch (Exception e) {
+            System.err.println("Error sending audit log: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
